@@ -1,0 +1,23 @@
+## [VisualStudio]
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## [Build Results]
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## [Dotnet tools & Rider]
+.idea/
+*.DotSettings.user
+
+## [Publish]
+publish/
+publish*.zip
+
+## [Environment / Local Config]
+appsettings.*.local.json

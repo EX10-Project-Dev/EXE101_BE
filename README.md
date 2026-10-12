@@ -1,28 +1,87 @@
-﻿# EXE101 Backend
+# EXE101_BE - Web Application Backend
 
-Backend service for the EXE101 project. This repository is intended to be cloned and developed alongside the project frontend.
+Dự án Backend cho hệ thống **EXE101**, xây dựng theo mô hình **Kiến trúc 3 tầng (3-Tier Architecture)** chuẩn FPT University.
 
-## Backend Task Flow
+## 🛠️ Công nghệ sử dụng
+- **Platform:** .NET 10 (C#)
+- **Web API:** ASP.NET Core Web API
+- **ORM:** Entity Framework Core 10 (SQL Server)
+- **Authentication/Identity:** ASP.NET Core Identity & JWT Bearer
+- **Mapping:** AutoMapper 16
+- **Documentation:** Swagger / OpenAPI
 
-1. Receive a request from the client.
-2. Validate the request data and check authentication/permissions when required.
-3. Run the relevant business logic in the service layer.
-4. Read or update application data through the data access layer.
-5. Return a structured response to the client, including useful error information when needed.
+---
 
-## Getting Started
+## 🏛️ Cấu trúc thư mục 3 tầng
 
-Clone the repository:
-
-```bash
-git clone <repository-url>
-cd EXE101_BE
+```text
+EXE101_BE/
+├── EXE101_BE.slnx
+├── .antigravityrules         # Quy chuẩn kiến trúc & luồng phát triển
+├── .gitignore                # Git ignore chuẩn cho .NET
+├── README.md
+│
+├── DAL/                      # Tầng 1: Data Access Layer (Truy cập dữ liệu)
+│   ├── Data/
+│   │   └── AppDbContext.cs   # DbContext chính kế thừa IdentityDbContext
+│   ├── Entities/
+│   │   ├── BaseEntity.cs     # Class cơ sở chứa Id, CreatedAt, UpdatedAt, IsDeleted
+│   │   └── AppUser.cs        # Entity người dùng kế thừa IdentityUser
+│   ├── IRepositories/
+│   │   ├── IGenericRepository.cs # Interface CRUD chung
+│   │   └── IUnitOfWork.cs        # Interface Unit of Work
+│   └── Repositories/
+│       ├── GenericRepository.cs  # Implementation CRUD chung
+│       └── UnitOfWork.cs         # Implementation Unit of Work
+│
+├── BLL/                      # Tầng 2: Business Logic Layer (Xử lý nghiệp vụ)
+│   ├── DTOs/
+│   │   ├── Requests/         # Chứa DTO nhận từ Client
+│   │   ├── Responses/        # Chứa DTO trả về Client
+│   │   └── Common/
+│   │       └── ApiResponse.cs# Wrapper chuẩn cho kết quả API
+│   ├── Interfaces/           # Chứa các interface Service (IService)
+│   ├── Services/             # Chứa logic nghiệp vụ thực thi Service
+│   └── Mappings/
+│       └── AutoMapperProfile.cs # Cấu hình ánh xạ Entity <-> DTO
+│
+└── API/                      # Tầng 3: Presentation Layer (Web API)
+    ├── Controllers/
+    │   └── BaseApiController.cs # Base Controller dùng chung
+    ├── Middlewares/          # Exception handling, logging middlewares
+    ├── Program.cs            # Cấu hình DI, DbContext, AutoMapper, Swagger, CORS
+    └── appsettings.json      # ConnectionString & cấu hình hệ thống
 ```
 
-Project-specific setup and run commands will be added here when the backend source and configuration are available.
+---
 
-## Development Notes
+## 🔄 Luồng thực thi chuẩn (Mandatory Flow)
+```text
+Client Request 
+   ⬇
+Controller (API) 
+   ⬇
+IService / Service (BLL) 
+   ⬇
+IUnitOfWork / IRepository (DAL) 
+   ⬇
+AppDbContext 
+   ⬇
+SQL Server Database
+```
 
-- Keep API behavior consistent with the frontend requirements.
-- Validate inputs and handle errors clearly.
-- Add setup instructions, environment variable details, and API documentation as the project develops.
+---
+
+## 🚀 Hướng dẫn khởi chạy
+1. **Kiểm tra build:**
+   ```bash
+   dotnet build EXE101_BE.slnx
+   ```
+2. **Cập nhật chuỗi kết nối:**
+   Mở `API/appsettings.json` và sửa `DefaultConnection` cho phù hợp với máy của bạn.
+3. **Chạy API:**
+   ```bash
+   dotnet run --project API/API.csproj
+   ```
+4. **Truy cập Swagger:**
+   Mở trình duyệt vào đường dẫn `https://localhost:7297/swagger` để test các endpoint.

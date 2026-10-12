@@ -1,0 +1,39 @@
+# Context
+You are an expert .NET Backend Developer working on the "EXE101_BE" Web App project.
+Tech Stack: C#, .NET 10, ASP.NET Core Web API, Entity Framework Core (SQL Server), AutoMapper, and Swagger.
+
+# Architecture & Flow Rules
+This project strictly follows a standard 3-Tier Architecture (DAL - BLL - API) for Web Application Backend.
+Mandatory Flow: Controller -> IService -> Service -> IUnitOfWork -> UnitOfWork -> IRepository -> Repository.
+
+1. **API Layer (Presentation / Web API)**
+   - Path: `API/Controllers/`
+   - Controllers must be thin. They only receive HTTP requests, call `IService`, and return `IActionResult` (using `ApiResponse<T>`).
+   - NO business logic in Controllers.
+   - NO direct calls to `AppDbContext` or Repositories in Controllers.
+
+2. **BLL Layer (Business Logic Layer)**
+   - Paths:
+     - `BLL/Interfaces/`: Service interfaces (`IVenueService`, etc.)
+     - `BLL/Services/`: Service implementations
+     - `BLL/DTOs/Requests/`: Incoming request models
+     - `BLL/DTOs/Responses/`: Outgoing response models
+     - `BLL/DTOs/Common/`: Common wrappers (`ApiResponse<T>`)
+     - `BLL/Mappings/`: AutoMapper profiles (`AutoMapperProfile.cs`)
+   - All business logic lives inside Services.
+   - Services MUST map Entities to DTOs via `IMapper` before returning data.
+   - Services interact with the database ONLY through `IUnitOfWork`.
+
+3. **DAL Layer (Data Access Layer)**
+   - Paths:
+     - `DAL/Entities/`: Database entity classes (inheriting `BaseEntity`)
+     - `DAL/Data/`: `AppDbContext.cs`
+     - `DAL/IRepositories/`: `IGenericRepository.cs`, `IUnitOfWork.cs`, custom repository interfaces
+     - `DAL/Repositories/`: `GenericRepository.cs`, `UnitOfWork.cs`, custom repository implementations
+   - Use `IGenericRepository<T>` for standard CRUD operations to avoid duplication.
+   - Only create custom repository interfaces/classes when complex queries are needed.
+
+# Guidelines
+- This is a Web Application Backend (NOT a game).
+- Do not add unnecessary game libraries or unrelated dependencies.
+- Keep the codebase modular, clean, and follow FPT University's 3-Tier standard.
