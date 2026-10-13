@@ -1,4 +1,6 @@
 using BLL.Mappings;
+using BLL.Interfaces;
+using BLL.Services;
 using DAL.Data;
 using DAL.Entities;
 using DAL.IRepositories;
@@ -23,6 +25,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 
 // 3. Add Identity
+builder.Services.AddDataProtection();
 builder.Services.AddIdentityCore<AppUser>(opt =>
 {
     opt.Password.RequireNonAlphanumeric = false;
@@ -42,8 +45,8 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.AddProfile<AutoMapperProfile>();
 });
 
-// 6. Register BLL Services here as you create them
-// Example: builder.Services.AddScoped<IYourService, YourService>();
+// 6. Register BLL services
+builder.Services.AddScoped<IVenueSearchService, VenueSearchService>();
 
 // 7. Add CORS
 builder.Services.AddCors(options =>

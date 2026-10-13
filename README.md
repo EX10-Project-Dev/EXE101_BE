@@ -85,3 +85,15 @@ SQL Server Database
    ```
 4. **Truy cập Swagger:**
    Mở trình duyệt vào đường dẫn `https://localhost:7297/swagger` để test các endpoint.
+
+## 🗄️ Database cho venue search MVP
+
+Migration `InitialVenueCatalog` tạo các bảng venue, category, tag, amenity, giờ mở cửa, ngoại lệ giờ và ảnh. Mỗi thành viên có thể tạo/cập nhật database SQL Server local bằng cùng migration:
+
+```bash
+dotnet ef database update --project DAL/DAL.csproj --startup-project API/API.csproj
+```
+
+Connection string mặc định trong `API/appsettings.json` trỏ tới SQL Server local (`localhost`, database `EXE101_DB`). Nếu dùng SQL Server instance khác, đặt connection string riêng bằng user secrets hoặc biến môi trường `ConnectionStrings__DefaultConnection`; không commit mật khẩu hoặc connection string của máy chủ dùng chung lên Git.
+
+Migration giúp mọi máy có cùng cấu trúc bảng. Muốn cả nhóm cùng nhìn thấy một bộ dữ liệu, cần trỏ API của từng người tới cùng một SQL Server đã được host và cấp quyền truy cập phù hợp. Không mở SQL Server trực tiếp ra Internet; dùng firewall/IP allowlist và credentials riêng.
