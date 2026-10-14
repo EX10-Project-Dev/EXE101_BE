@@ -51,6 +51,8 @@ builder.Services.AddAutoMapper(cfg =>
 });
 
 // 6. Register BLL services
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IPromptAnalysisService, PromptAnalysisService>();
 builder.Services.AddScoped<IVenueSearchService, VenueSearchService>();
 
 // 7. Add CORS

@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using BLL.DTOs.Common;
 using BLL.DTOs.Requests;
 using BLL.DTOs.Responses;
 using BLL.Interfaces;
@@ -18,11 +19,16 @@ public sealed class VenueSearchService : IVenueSearchService
 {
     private readonly AppDbContext _db;
     private readonly bool _includePendingVenues;
+    private readonly IPromptAnalysisService _promptAnalysisService;
 
-    public VenueSearchService(AppDbContext db, IConfiguration configuration)
+    public VenueSearchService(
+        AppDbContext db,
+        IConfiguration configuration,
+        IPromptAnalysisService promptAnalysisService)
     {
         _db = db;
         _includePendingVenues = configuration.GetValue<bool>("Search:IncludePendingVenues");
+        _promptAnalysisService = promptAnalysisService;
     }
 
     public async Task<VenueSearchResponse> SearchAsync(VenueSearchRequest request, CancellationToken cancellationToken = default)
@@ -47,24 +53,61 @@ public sealed class VenueSearchService : IVenueSearchService
 
         var venues = await query.ToListAsync(cancellationToken);
 
-        // Pre-process filters
+        // 0. Parse Prompt with AI / Rule-based NLP if provided
+        ParsedSearchCriteria? parsedCriteria = null;
+        if (!string.IsNullOrWhiteSpace(request.Prompt))
+        {
+            parsedCriteria = await _promptAnalysisService.AnalyzePromptAsync(request.Prompt, cancellationToken);
+        }
+
+        // Pre-process filters with prompt fallback
         var categoryCodes = request.CategoryCodes
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Select(x => x.Trim())
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        if (categoryCodes.Count == 0 && !string.IsNullOrWhiteSpace(parsedCriteria?.InferredCategoryCode))
+        {
+            categoryCodes.Add(parsedCriteria.InferredCategoryCode);
+        }
 
         var requestedAmenities = request.AmenityCodes
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Select(x => x.Trim().ToUpperInvariant())
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
+        if (parsedCriteria is not null)
+        {
+            foreach (var am in parsedCriteria.InferredAmenityCodes)
+            {
+                requestedAmenities.Add(am);
+            }
+        }
+
         var requestedAtmospheres = request.AtmosphereTags
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Select(x => x.Trim().ToUpperInvariant())
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
+        if (parsedCriteria is not null)
+        {
+            foreach (var at in parsedCriteria.InferredAtmosphereTags)
+            {
+                requestedAtmospheres.Add(at);
+            }
+        }
+
         var prompt = request.Prompt?.Trim().ToLowerInvariant();
         var purpose = request.Purpose?.Trim().ToUpperInvariant();
+        if (string.IsNullOrEmpty(purpose) && !string.IsNullOrEmpty(parsedCriteria?.InferredPurpose))
+        {
+            purpose = parsedCriteria.InferredPurpose.ToUpperInvariant();
+        }
+
+        var budgetMin = request.BudgetMin ?? parsedCriteria?.InferredBudgetMin;
+        var budgetMax = request.BudgetMax ?? parsedCriteria?.InferredBudgetMax;
+        var maxDistanceKm = request.MaxDistanceKm ?? parsedCriteria?.InferredMaxDistanceKm;
+        var groupSize = request.GroupSize ?? parsedCriteria?.InferredGroupSize;
 
         var scoredResults = new List<VenueSearchResult>();
 
@@ -79,10 +122,10 @@ public sealed class VenueSearchService : IVenueSearchService
                 continue;
 
             // 3. Budget hard filter
-            if (request.BudgetMin.HasValue && venue.PriceMax.HasValue && venue.PriceMax < request.BudgetMin.Value)
+            if (budgetMin.HasValue && venue.PriceMax.HasValue && venue.PriceMax < budgetMin.Value)
                 continue;
 
-            if (request.BudgetMax.HasValue && venue.PriceMin.HasValue && venue.PriceMin > request.BudgetMax.Value)
+            if (budgetMax.HasValue && venue.PriceMin.HasValue && venue.PriceMin > budgetMax.Value)
                 continue;
 
             // 4. Distance calculation & hard filter
@@ -96,7 +139,7 @@ public sealed class VenueSearchService : IVenueSearchService
                     (double)venue.Longitude);
             }
 
-            if (request.MaxDistanceKm.HasValue && (!distanceKm.HasValue || distanceKm.Value > request.MaxDistanceKm.Value))
+            if (maxDistanceKm.HasValue && (!distanceKm.HasValue || distanceKm.Value > maxDistanceKm.Value))
                 continue;
 
             // 5. Amenities & tags parsing (from relational tables or SourceDataJson)
@@ -132,13 +175,13 @@ public sealed class VenueSearchService : IVenueSearchService
             if (hasAtmosphereMatch) score += 0.15;
 
             // Budget fit bonus (+0.10)
-            if (request.BudgetMin.HasValue || request.BudgetMax.HasValue)
+            if (budgetMin.HasValue || budgetMax.HasValue)
             {
                 score += 0.10;
             }
 
             // Group size bonus (+0.05)
-            if (request.GroupSize.HasValue && request.GroupSize.Value >= 4 && venueAmenities.Contains("GROUP_SEATING"))
+            if (groupSize.HasValue && groupSize.Value >= 4 && venueAmenities.Contains("GROUP_SEATING"))
             {
                 score += 0.05;
             }
@@ -255,7 +298,7 @@ public sealed class VenueSearchService : IVenueSearchService
             .Take(pageSize)
             .ToList();
 
-        var warnings = BuildWarnings(request);
+        var warnings = BuildWarnings(request, parsedCriteria);
 
         return new VenueSearchResponse
         {
@@ -446,11 +489,15 @@ public sealed class VenueSearchService : IVenueSearchService
         }
     }
 
-    private static IReadOnlyList<string> BuildWarnings(VenueSearchRequest request)
+    private static IReadOnlyList<string> BuildWarnings(VenueSearchRequest request, ParsedSearchCriteria? parsed)
     {
         var warnings = new List<string>();
-        if (!string.IsNullOrWhiteSpace(request.Prompt))
-            warnings.Add("Prompt đang được đối chiếu từ khóa với tên quán và mô tả; AI nâng cao sẽ được bổ sung ở bản kế tiếp.");
+        if (parsed is not null && !string.IsNullOrWhiteSpace(parsed.RawPrompt))
+        {
+            warnings.Add(parsed.ExtractedByAi
+                ? $"AI đã trích xuất tiêu chí từ prompt: {parsed.SummaryExplanation}"
+                : $"Bộ NLP đã trích xuất tiêu chí từ prompt: {parsed.SummaryExplanation}");
+        }
         return warnings;
     }
 }
