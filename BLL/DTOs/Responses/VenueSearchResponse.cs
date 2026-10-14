@@ -13,6 +13,7 @@ public sealed class VenueSearchResponse
     public int PageSize { get; init; }
     public bool HasMore { get; init; }
     public IReadOnlyList<VenueSearchResult> Results { get; init; } = [];
+    public IReadOnlyList<string> Warnings { get; init; } = [];
 }
 
 public sealed class VenueSearchResult
@@ -33,8 +34,12 @@ public sealed class VenueSummary
     public IReadOnlyList<string> ImageUrls { get; init; } = [];
     public string Address { get; init; } = string.Empty;
     public VenueLocation Location { get; init; } = new();
+    public double? DistanceKm { get; init; }
+    public string? GoogleMapsUrl { get; init; }
     public decimal? PriceMin { get; init; }
     public decimal? PriceMax { get; init; }
+    public string? PriceNote { get; init; }
+    public IReadOnlyDictionary<string, string?> SourceData { get; init; } = new Dictionary<string, string?>();
     public string CurrencyCode { get; init; } = "VND";
     public bool IsOpenNow { get; init; }
     public double? RatingAverage { get; init; }

@@ -5,6 +5,7 @@ public enum PriceBasis { PerPerson, PerItem }
 
 public class Venue : BaseEntity
 {
+    public string? SourceId { get; set; }
     public string Name { get; set; } = string.Empty;
     public Guid CategoryId { get; set; }
     public string? Description { get; set; }
@@ -14,6 +15,8 @@ public class Venue : BaseEntity
     public decimal? PriceMin { get; set; }
     public decimal? PriceMax { get; set; }
     public PriceBasis? PriceBasis { get; set; }
+    public string? PriceNote { get; set; }
+    public string? SourceDataJson { get; set; }
     public string CurrencyCode { get; set; } = "VND";
     public string? GooglePlaceId { get; set; }
     public string? WebsiteUrl { get; set; }

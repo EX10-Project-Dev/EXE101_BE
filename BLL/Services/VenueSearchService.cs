@@ -1,132 +1,114 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
+using System.Text.Json;
 using BLL.DTOs.Requests;
 using BLL.DTOs.Responses;
 using BLL.Interfaces;
+using DAL.Data;
 using DAL.Entities;
-using DAL.IRepositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace BLL.Services;
 
+/// <summary>
+/// Searches and recommends venues with multi-criteria filtering, distance calculation,
+/// amenity parsing, and intelligent scoring.
+/// </summary>
 public sealed class VenueSearchService : IVenueSearchService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly AppDbContext _db;
+    private readonly bool _includePendingVenues;
 
-    public VenueSearchService(IUnitOfWork unitOfWork)
+    public VenueSearchService(AppDbContext db, IConfiguration configuration)
     {
-        _unitOfWork = unitOfWork;
+        _db = db;
+        _includePendingVenues = configuration.GetValue<bool>("Search:IncludePendingVenues");
     }
 
     public async Task<VenueSearchResponse> SearchAsync(VenueSearchRequest request, CancellationToken cancellationToken = default)
     {
-        // 1. Fetch published venues with full details (Category, Amenities, Tags, Photos, OpeningHours)
-        var allVenues = await _unitOfWork.Venues.GetPublishedVenuesWithDetailsAsync(cancellationToken);
+        var now = GetVietnamLocalTime();
 
-        if (allVenues.Count == 0)
+        var query = _db.Venues
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Include(x => x.Category)
+            .Include(x => x.Photos)
+            .Include(x => x.OpeningHours)
+            .Include(x => x.HoursExceptions)
+            .Include(x => x.Amenities).ThenInclude(va => va.Amenity)
+            .Include(x => x.Tags).ThenInclude(vt => vt.Tag)
+            .Where(x => !x.IsDeleted);
+
+        if (!_includePendingVenues)
         {
-            return new VenueSearchResponse
-            {
-                SearchHistoryId = Guid.NewGuid(),
-                Status = "NO_MATCH",
-                Message = "Hiện tại chưa có dữ liệu địa điểm trong hệ thống.",
-                TotalCount = 0,
-                Page = request.Page,
-                PageSize = request.PageSize,
-                HasMore = false,
-                Results = []
-            };
+            query = query.Where(x => x.Status == VenueStatus.Published);
         }
 
-        // 2. Normalize search criteria
-        var origin = request.Origin;
-        var hasOrigin = origin is not null;
-        var userLat = origin?.Latitude ?? 0;
-        var userLng = origin?.Longitude ?? 0;
+        var venues = await query.ToListAsync(cancellationToken);
 
+        // Pre-process filters
         var categoryCodes = request.CategoryCodes
-            .Where(c => !string.IsNullOrWhiteSpace(c))
-            .Select(c => c.Trim().ToUpperInvariant())
-            .ToHashSet();
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        var atmosphereTags = request.AtmosphereTags
-            .Where(t => !string.IsNullOrWhiteSpace(t))
-            .Select(t => t.Trim().ToUpperInvariant())
-            .ToHashSet();
+        var requestedAmenities = request.AmenityCodes
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim().ToUpperInvariant())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        var amenityCodes = request.AmenityCodes
-            .Where(a => !string.IsNullOrWhiteSpace(a))
-            .Select(a => a.Trim().ToUpperInvariant())
-            .ToHashSet();
+        var requestedAtmospheres = request.AtmosphereTags
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim().ToUpperInvariant())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        var purpose = request.Purpose?.Trim().ToUpperInvariant();
         var prompt = request.Prompt?.Trim().ToLowerInvariant();
+        var purpose = request.Purpose?.Trim().ToUpperInvariant();
 
-        // 3. Evaluate and filter venues
-        var scoredList = new List<VenueSearchResult>();
+        var scoredResults = new List<VenueSearchResult>();
 
-        foreach (var v in allVenues)
+        foreach (var venue in venues)
         {
-            // Calculate distance
+            // 1. Check open now (per Thai's schedule & exception logic)
+            if (!IsOpenAt(venue, now))
+                continue;
+
+            // 2. Category hard filter
+            if (categoryCodes.Count > 0 && !categoryCodes.Contains(venue.Category.Code))
+                continue;
+
+            // 3. Budget hard filter
+            if (request.BudgetMin.HasValue && venue.PriceMax.HasValue && venue.PriceMax < request.BudgetMin.Value)
+                continue;
+
+            if (request.BudgetMax.HasValue && venue.PriceMin.HasValue && venue.PriceMin > request.BudgetMax.Value)
+                continue;
+
+            // 4. Distance calculation & hard filter
             double? distanceKm = null;
-            if (hasOrigin)
+            if (request.Origin is not null)
             {
-                distanceKm = CalculateHaversineDistance(userLat, userLng, (double)v.Latitude, (double)v.Longitude);
+                distanceKm = CalculateDistanceKm(
+                    request.Origin.Latitude,
+                    request.Origin.Longitude,
+                    (double)venue.Latitude,
+                    (double)venue.Longitude);
             }
 
-            // Hard Filter: Distance
-            if (request.MaxDistanceKm.HasValue && distanceKm.HasValue && distanceKm.Value > request.MaxDistanceKm.Value)
-            {
+            if (request.MaxDistanceKm.HasValue && (!distanceKm.HasValue || distanceKm.Value > request.MaxDistanceKm.Value))
                 continue;
-            }
 
-            // Hard Filter: Budget
-            if (request.BudgetMin.HasValue && v.PriceMax.HasValue && v.PriceMax.Value < request.BudgetMin.Value)
-            {
+            // 5. Amenities & tags parsing (from relational tables or SourceDataJson)
+            var sourceData = DeserializeSourceData(venue.SourceDataJson);
+            var venueAmenities = ExtractAmenityCodes(venue, sourceData);
+            var (venuePurposes, venueAtmospheres) = ExtractTags(venue, sourceData);
+
+            // Amenities hard filter: must have all requested amenities
+            if (requestedAmenities.Count > 0 && !requestedAmenities.IsSubsetOf(venueAmenities))
                 continue;
-            }
-            if (request.BudgetMax.HasValue && v.PriceMin.HasValue && v.PriceMin.Value > request.BudgetMax.Value)
-            {
-                continue;
-            }
 
-            // Hard Filter: Category
-            if (categoryCodes.Count > 0 && (v.Category is null || !categoryCodes.Contains(v.Category.Code.ToUpperInvariant())))
-            {
-                continue;
-            }
-
-            // Available amenities for this venue
-            var venueAvailableAmenities = v.Amenities
-                .Where(a => a.Availability == AmenityAvailability.Available)
-                .Select(a => a.Amenity.Code.ToUpperInvariant())
-                .ToHashSet();
-
-            // Hard Filter: Required Amenities
-            if (amenityCodes.Count > 0 && !amenityCodes.IsSubsetOf(venueAvailableAmenities))
-            {
-                continue;
-            }
-
-            // Check if open now (VN time UTC+7)
-            var nowVn = DateTime.UtcNow.AddHours(7);
-            var todayDayOfWeek = nowVn.DayOfWeek;
-            var currentTime = TimeOnly.FromDateTime(nowVn);
-            var isOpenNow = false;
-
-            var todayHour = v.OpeningHours.FirstOrDefault(h => h.DayOfWeek == todayDayOfWeek);
-            if (todayHour is not null && !todayHour.IsClosed && todayHour.OpenTime.HasValue && todayHour.CloseTime.HasValue)
-            {
-                isOpenNow = currentTime >= todayHour.OpenTime.Value && currentTime <= todayHour.CloseTime.Value;
-            }
-            else if (v.OpeningHours.Count == 0)
-            {
-                isOpenNow = true;
-            }
-
-            // 4. Scoring & Ranking Logic
+            // 6. Recommendation Scoring (0.0 -> 1.0)
             var score = 0.50; // Base score
 
             // Distance score bonus (up to +0.25)
@@ -140,13 +122,13 @@ public sealed class VenueSearchService : IVenueSearchService
             }
 
             // Purpose bonus (+0.15)
-            var hasPurposeMatch = !string.IsNullOrEmpty(purpose) && v.Tags.Any(t =>
-                t.Tag.TagType == VenueTagType.Purpose && t.Tag.Code.Equals(purpose, StringComparison.OrdinalIgnoreCase));
+            var hasPurposeMatch = !string.IsNullOrEmpty(purpose) &&
+                venuePurposes.Any(p => p.Equals(purpose, StringComparison.OrdinalIgnoreCase));
             if (hasPurposeMatch) score += 0.15;
 
             // Atmosphere bonus (+0.15)
-            var hasAtmosphereMatch = atmosphereTags.Count > 0 && v.Tags.Any(t =>
-                t.Tag.TagType == VenueTagType.Atmosphere && atmosphereTags.Contains(t.Tag.Code.ToUpperInvariant()));
+            var hasAtmosphereMatch = requestedAtmospheres.Count > 0 &&
+                venueAtmospheres.Any(a => requestedAtmospheres.Contains(a));
             if (hasAtmosphereMatch) score += 0.15;
 
             // Budget fit bonus (+0.10)
@@ -155,16 +137,16 @@ public sealed class VenueSearchService : IVenueSearchService
                 score += 0.10;
             }
 
-            // Group size bonus
-            if (request.GroupSize.HasValue && request.GroupSize.Value >= 4 && venueAvailableAmenities.Contains("GROUP_SEATING"))
+            // Group size bonus (+0.05)
+            if (request.GroupSize.HasValue && request.GroupSize.Value >= 4 && venueAmenities.Contains("GROUP_SEATING"))
             {
                 score += 0.05;
             }
 
-            // Prompt match bonus
+            // Prompt keyword bonus (+0.15)
             if (!string.IsNullOrWhiteSpace(prompt))
             {
-                var combinedText = $"{v.Name} {v.Description} {v.Category?.Name}".ToLowerInvariant();
+                var combinedText = $"{venue.Name} {venue.Description} {venue.Category.Name}".ToLowerInvariant();
                 if (combinedText.Contains(prompt))
                 {
                     score += 0.15;
@@ -173,137 +155,302 @@ public sealed class VenueSearchService : IVenueSearchService
 
             var finalScore = Math.Min(1.0, Math.Round(score, 2));
 
-            // 5. Generate Match Reasons
+            // 7. Generate reasons
             var reasons = new List<string>();
             if (distanceKm.HasValue)
             {
-                reasons.Add($"Cách bạn {distanceKm.Value:F1} km");
+                reasons.Add($"Cách vị trí bắt đầu {Math.Round(distanceKm.Value, 1):0.#} km");
             }
-            if (v.PriceMin.HasValue && v.PriceMax.HasValue)
+            if (venue.PriceMin.HasValue && venue.PriceMax.HasValue)
             {
-                reasons.Add($"Mức giá {v.PriceMin.Value:N0} - {v.PriceMax.Value:N0} VND phù hợp");
+                reasons.Add($"Mức giá {venue.PriceMin.Value:N0} - {venue.PriceMax.Value:N0} VND phù hợp");
             }
+            else if (!string.IsNullOrWhiteSpace(venue.PriceNote))
+            {
+                reasons.Add($"Giá: {venue.PriceNote}");
+            }
+
             if (hasPurposeMatch)
             {
-                var pTagName = v.Tags.FirstOrDefault(t => t.Tag.TagType == VenueTagType.Purpose)?.Tag.Name ?? "học tập / làm việc";
-                reasons.Add($"Phù hợp {pTagName}");
+                reasons.Add($"Phù hợp mục đích {request.Purpose}");
             }
             if (hasAtmosphereMatch)
             {
-                var aTagName = v.Tags.FirstOrDefault(t => t.Tag.TagType == VenueTagType.Atmosphere)?.Tag.Name ?? "thoải mái";
-                reasons.Add($"Không gian {aTagName}");
+                reasons.Add("Không gian phù hợp nhu cầu");
             }
-            if (venueAvailableAmenities.Contains("WIFI") && venueAvailableAmenities.Contains("AIR_CONDITIONING"))
+            if (venueAmenities.Contains("WIFI") && venueAmenities.Contains("AIR_CONDITIONING"))
             {
                 reasons.Add("Có Wi-Fi và máy lạnh");
             }
-            else if (venueAvailableAmenities.Contains("WIFI"))
+            else if (venueAmenities.Contains("WIFI"))
             {
                 reasons.Add("Có Wi-Fi miễn phí");
             }
 
-            var summaryReason = reasons.Count > 0
-                ? string.Join(", ", reasons) + "."
-                : "Địa điểm được gợi ý dựa trên đánh giá và mức độ phổ biến.";
+            if (reasons.Count == 0)
+            {
+                reasons.Add("Đang mở theo lịch hoạt động hiện tại.");
+            }
 
-            // 6. Map to DTO
-            var imageUrls = v.Photos
-                .OrderBy(p => p.SortOrder)
-                .Select(p => p.ImageUrl)
-                .Where(u => !string.IsNullOrWhiteSpace(u))
-                .ToList();
+            var summaryReason = string.Join(", ", reasons) + ".";
+
+            // 8. Image URLs
+            var imageUrls = venue.Photos.OrderBy(p => p.SortOrder).Select(p => p.ImageUrl).ToList();
+            if (imageUrls.Count == 0)
+            {
+                if (sourceData.TryGetValue("exteriorPhotoUrl", out var ext) && !string.IsNullOrWhiteSpace(ext))
+                    imageUrls.Add(ext);
+                if (sourceData.TryGetValue("interiorPhotoUrl", out var inte) && !string.IsNullOrWhiteSpace(inte))
+                    imageUrls.Add(inte);
+                if (sourceData.TryGetValue("menuPhotoUrl", out var menu) && !string.IsNullOrWhiteSpace(menu))
+                    imageUrls.Add(menu);
+            }
 
             var summary = new VenueSummary
             {
-                VenueId = v.Id,
-                Name = v.Name,
-                CategoryName = v.Category?.Name ?? "F&B",
-                ShortDescription = v.Description,
+                VenueId = venue.Id,
+                Name = venue.Name,
+                CategoryName = venue.Category.Name,
+                ShortDescription = venue.Description,
                 ImageUrls = imageUrls,
-                Address = v.Address,
+                Address = venue.Address,
                 Location = new VenueLocation
                 {
-                    Latitude = (double)v.Latitude,
-                    Longitude = (double)v.Longitude
+                    Latitude = (double)venue.Latitude,
+                    Longitude = (double)venue.Longitude
                 },
-                PriceMin = v.PriceMin,
-                PriceMax = v.PriceMax,
-                CurrencyCode = v.CurrencyCode,
-                IsOpenNow = isOpenNow,
+                DistanceKm = distanceKm.HasValue ? Math.Round(distanceKm.Value, 2) : null,
+                GoogleMapsUrl = BuildGoogleMapsUrl(venue),
+                PriceMin = venue.PriceMin,
+                PriceMax = venue.PriceMax,
+                PriceNote = venue.PriceNote,
+                SourceData = sourceData,
+                CurrencyCode = venue.CurrencyCode,
+                IsOpenNow = true,
                 RatingAverage = 4.6,
                 ReviewCount = 20,
-                AmenityCodes = venueAvailableAmenities.ToList()
+                AmenityCodes = venueAmenities.ToList()
             };
 
-            scoredList.Add(new VenueSearchResult
+            scoredResults.Add(new VenueSearchResult
             {
                 Venue = summary,
-                DistanceKm = distanceKm,
+                DistanceKm = summary.DistanceKm,
                 MatchScore = finalScore,
                 RecommendationReason = summaryReason,
                 MatchReasons = reasons
             });
         }
 
-        // 7. Sort by MatchScore DESC, then Distance ASC
-        var sortedResults = scoredList
-            .OrderByDescending(r => r.MatchScore)
-            .ThenBy(r => r.DistanceKm ?? double.MaxValue)
-            .ToList();
+        // 9. Sort by MatchScore DESC, then Distance ASC
+        var ordered = request.Origin is null
+            ? scoredResults.OrderByDescending(x => x.MatchScore).ThenBy(x => x.Venue.Name).ToList()
+            : scoredResults.OrderByDescending(x => x.MatchScore).ThenBy(x => x.DistanceKm ?? double.MaxValue).ToList();
 
-        var totalCount = sortedResults.Count;
-
-        if (totalCount == 0)
-        {
-            return new VenueSearchResponse
-            {
-                SearchHistoryId = Guid.NewGuid(),
-                Status = "NO_MATCH",
-                Message = "Không tìm thấy địa điểm phù hợp với tiêu chí hiện tại. Bạn có thể thử nới rộng khoảng cách hoặc khoảng giá.",
-                TotalCount = 0,
-                Page = request.Page,
-                PageSize = request.PageSize,
-                HasMore = false,
-                Results = []
-            };
-        }
-
-        // 8. Pagination
-        var pageSize = Math.Max(1, request.PageSize);
+        var totalCount = ordered.Count;
         var page = Math.Max(1, request.Page);
-        var pagedResults = sortedResults
+        var pageSize = Math.Max(1, request.PageSize);
+        var pageItems = ordered
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToList();
 
-        var hasMore = (page * pageSize) < totalCount;
+        var warnings = BuildWarnings(request);
 
         return new VenueSearchResponse
         {
             SearchHistoryId = Guid.NewGuid(),
-            Status = "MATCHED",
-            Message = $"Tìm thấy {totalCount} địa điểm phù hợp nhất với nhu cầu của bạn.",
+            Status = totalCount > 0 ? "MATCHED" : "NO_MATCH",
+            Message = totalCount > 0
+                ? $"Tìm thấy {totalCount} địa điểm phù hợp nhất với nhu cầu của bạn."
+                : "Không tìm thấy địa điểm đang mở phù hợp với các điều kiện đã chọn.",
             TotalCount = totalCount,
             Page = page,
             PageSize = pageSize,
-            HasMore = hasMore,
-            Results = pagedResults
+            HasMore = (page * pageSize) < totalCount,
+            Results = pageItems,
+            Warnings = warnings
         };
     }
 
-    private static double CalculateHaversineDistance(double lat1, double lon1, double lat2, double lon2)
+    private static HashSet<string> ExtractAmenityCodes(Venue venue, IReadOnlyDictionary<string, string?> sourceData)
     {
-        const double earthRadiusKm = 6371.0;
-        var dLat = ToRadians(lat2 - lat1);
-        var dLon = ToRadians(lon2 - lon1);
+        var codes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
-                Math.Cos(ToRadians(lat1)) * Math.Cos(ToRadians(lat2)) *
-                Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+        // Relational table
+        if (venue.Amenities is not null)
+        {
+            foreach (var va in venue.Amenities)
+            {
+                if (va.Amenity is not null && !string.IsNullOrWhiteSpace(va.Amenity.Code))
+                    codes.Add(va.Amenity.Code);
+            }
+        }
 
-        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-        return Math.Round(earthRadiusKm * c, 2);
+        // SourceData fallback
+        if (IsPositive(sourceData, "wifi")) codes.Add("WIFI");
+        if (IsPositive(sourceData, "powerOutlets")) codes.Add("POWER_OUTLET");
+        if (IsPositive(sourceData, "airConditioning")) codes.Add("AIR_CONDITIONING");
+        if (IsPositive(sourceData, "motorbikeParking"))
+        {
+            codes.Add("PARKING");
+            codes.Add("MOTORBIKE_PARKING");
+        }
+        if (IsPositive(sourceData, "carParking")) codes.Add("CAR_PARKING");
+        if (IsPositive(sourceData, "suitableForGroupsOf4Plus")) codes.Add("GROUP_SEATING");
+
+        return codes;
     }
 
-    private static double ToRadians(double degrees) => degrees * Math.PI / 180.0;
+    private static (List<string> Purposes, List<string> Atmospheres) ExtractTags(Venue venue, IReadOnlyDictionary<string, string?> sourceData)
+    {
+        var purposes = new List<string>();
+        var atmospheres = new List<string>();
+
+        if (venue.Tags is not null)
+        {
+            foreach (var vt in venue.Tags)
+            {
+                if (vt.Tag is null) continue;
+                if (vt.Tag.TagType == VenueTagType.Purpose)
+                    purposes.Add(vt.Tag.Code);
+                else if (vt.Tag.TagType == VenueTagType.Atmosphere)
+                    atmospheres.Add(vt.Tag.Code);
+            }
+        }
+
+        if (sourceData.TryGetValue("tagsAndPurpose", out var tp) && !string.IsNullOrWhiteSpace(tp))
+        {
+            var rawTags = tp.Split([';', ',', '/'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            foreach (var t in rawTags)
+            {
+                var lower = t.ToLowerInvariant();
+                if (lower.Contains("học") || lower.Contains("study") || lower.Contains("làm việc") || lower.Contains("work"))
+                {
+                    purposes.Add("STUDY");
+                    purposes.Add("WORK");
+                }
+                if (lower.Contains("hẹn hò") || lower.Contains("date") || lower.Contains("dating"))
+                    purposes.Add("DATING");
+                if (lower.Contains("nhóm") || lower.Contains("họp") || lower.Contains("gathering") || lower.Contains("tụ tập"))
+                    purposes.Add("GATHERING");
+                if (lower.Contains("ăn tối") || lower.Contains("dinner") || lower.Contains("lẩu") || lower.Contains("nướng"))
+                    purposes.Add("DINING");
+            }
+        }
+
+        if (sourceData.TryGetValue("observedNoise", out var noise) && !string.IsNullOrWhiteSpace(noise))
+        {
+            var lower = noise.ToLowerInvariant();
+            if (lower.Contains("yên tĩnh") || lower.Contains("quiet"))
+                atmospheres.Add("QUIET");
+            if (lower.Contains("ấm cúng") || lower.Contains("cozy"))
+                atmospheres.Add("COZY");
+            if (lower.Contains("náo nhiệt") || lower.Contains("lively"))
+                atmospheres.Add("LIVELY");
+        }
+
+        return (purposes.Distinct(StringComparer.OrdinalIgnoreCase).ToList(),
+                atmospheres.Distinct(StringComparer.OrdinalIgnoreCase).ToList());
+    }
+
+    private static bool IsPositive(IReadOnlyDictionary<string, string?> dict, string key)
+    {
+        if (dict.TryGetValue(key, out var val) && val is not null)
+        {
+            var trimmed = val.Trim().ToLowerInvariant();
+            return trimmed == "có" || trimmed == "co" || trimmed == "yes" || trimmed == "true";
+        }
+        return false;
+    }
+
+    private static bool IsOpenAt(Venue venue, DateTime now)
+    {
+        var today = DateOnly.FromDateTime(now);
+        var todayException = venue.HoursExceptions.FirstOrDefault(x => x.Date == today);
+        if (todayException is not null)
+        {
+            if (todayException.IsClosed)
+                return false;
+            if (IsWithinPeriod(TimeOnly.FromDateTime(now), todayException.OpenTime, todayException.CloseTime))
+                return true;
+        }
+        else
+        {
+            var todayHours = venue.OpeningHours.Where(x => x.DayOfWeek == now.DayOfWeek);
+            if (todayHours.Any(x => !x.IsClosed && IsWithinPeriod(TimeOnly.FromDateTime(now), x.OpenTime, x.CloseTime)))
+                return true;
+
+            var yesterday = now.AddDays(-1);
+            var yesterdayHours = venue.OpeningHours.Where(x => x.DayOfWeek == yesterday.DayOfWeek);
+            if (yesterdayHours.Any(x => !x.IsClosed
+                && x.OpenTime.HasValue && x.CloseTime.HasValue
+                && x.CloseTime < x.OpenTime
+                && TimeOnly.FromDateTime(now) < x.CloseTime.Value))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsWithinPeriod(TimeOnly now, TimeOnly? open, TimeOnly? close)
+    {
+        if (!open.HasValue || !close.HasValue || open == close)
+            return false;
+
+        return open < close
+            ? now >= open.Value && now < close.Value
+            : now >= open.Value;
+    }
+
+    private static DateTime GetVietnamLocalTime()
+    {
+        var timeZoneId = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? "SE Asia Standard Time"
+            : "Asia/Ho_Chi_Minh";
+        var zone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+        return TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, zone).DateTime;
+    }
+
+    private static double CalculateDistanceKm(double lat1, double lon1, double lat2, double lon2)
+    {
+        const double earthRadiusKm = 6371.0088;
+        var latitudeDelta = ToRadians(lat2 - lat1);
+        var longitudeDelta = ToRadians(lon2 - lon1);
+        var a = Math.Pow(Math.Sin(latitudeDelta / 2), 2)
+            + Math.Cos(ToRadians(lat1)) * Math.Cos(ToRadians(lat2)) * Math.Pow(Math.Sin(longitudeDelta / 2), 2);
+        return earthRadiusKm * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+    }
+
+    private static double ToRadians(double degrees) => degrees * Math.PI / 180;
+
+    private static string BuildGoogleMapsUrl(Venue venue)
+    {
+        var query = Uri.EscapeDataString($"{venue.Name}, {venue.Address}");
+        return $"https://www.google.com/maps/search/?api=1&query={query}";
+    }
+
+    private static IReadOnlyDictionary<string, string?> DeserializeSourceData(string? sourceDataJson)
+    {
+        if (string.IsNullOrWhiteSpace(sourceDataJson))
+            return new Dictionary<string, string?>();
+
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<string, string?>>(sourceDataJson)
+                ?? new Dictionary<string, string?>();
+        }
+        catch (JsonException)
+        {
+            return new Dictionary<string, string?>();
+        }
+    }
+
+    private static IReadOnlyList<string> BuildWarnings(VenueSearchRequest request)
+    {
+        var warnings = new List<string>();
+        if (!string.IsNullOrWhiteSpace(request.Prompt))
+            warnings.Add("Prompt đang được đối chiếu từ khóa với tên quán và mô tả; AI nâng cao sẽ được bổ sung ở bản kế tiếp.");
+        return warnings;
+    }
 }

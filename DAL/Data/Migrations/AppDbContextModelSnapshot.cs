@@ -201,6 +201,17 @@ namespace DAL.Data.Migrations
                         .HasPrecision(12, 2)
                         .HasColumnType("decimal(12,2)");
 
+                    b.Property<string>("PriceNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("SourceDataJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SourceId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -218,6 +229,10 @@ namespace DAL.Data.Migrations
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("SourceId")
+                        .IsUnique()
+                        .HasFilter("[SourceId] IS NOT NULL");
 
                     b.HasIndex("Status");
 

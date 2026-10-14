@@ -1,6 +1,7 @@
 using BLL.Mappings;
 using BLL.Interfaces;
 using BLL.Services;
+using API.Data;
 using DAL.Data;
 using DAL.Entities;
 using DAL.IRepositories;
@@ -10,6 +11,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Keep development logs in the console; writing to Windows Event Log requires elevated access.
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 
 // 1. Add Controllers
 builder.Services.AddControllers();
@@ -35,10 +40,9 @@ builder.Services.AddIdentityCore<AppUser>(opt =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-// 4. Register Dependency Injection for DAL (UnitOfWork & Repositories)
+// 4. Register Dependency Injection for DAL (UnitOfWork & Generic Repository)
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-builder.Services.AddScoped<IVenueRepository, VenueRepository>();
 
 // 5. Register AutoMapper
 builder.Services.AddAutoMapper(cfg =>
@@ -73,20 +77,18 @@ builder.Services.AddSwaggerGen(option =>
 
 var app = builder.Build();
 
-// 9. Auto-seed 40 Venues on Startup
-using (var scope = app.Services.CreateScope())
+if (app.Configuration.GetValue<bool>("SeedData:ImportVenueCatalogOnStartup"))
 {
-    var services = scope.ServiceProvider;
-    try
+    await using (var schemaScope = app.Services.CreateAsyncScope())
     {
-        var context = services.GetRequiredService<AppDbContext>();
-        await DbInitializer.SeedAsync(context);
+        var schemaDb = schemaScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await schemaDb.Database.ExecuteSqlRawAsync("IF COL_LENGTH('dbo.Venues', 'SourceDataJson') IS NULL ALTER TABLE [dbo].[Venues] ADD [SourceDataJson] nvarchar(max) NULL; IF NOT EXISTS (SELECT 1 FROM [__EFMigrationsHistory] WHERE [MigrationId] = '20261014143633_AddVenueSourceData') INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion]) VALUES ('20261014143633_AddVenueSourceData', '10.0.0');");
     }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogWarning(ex, "DbInitializer was skipped or encountered an issue connecting to the database.");
-    }
+
+    var seededVenueCount = await VenueCatalogSeeder.SeedAsync(
+        app.Services,
+        Path.Combine(AppContext.BaseDirectory, "Data", "venue-seed.json"));
+    Console.WriteLine($"Đã nạp {seededVenueCount} địa điểm từ bộ dữ liệu mẫu.");
 }
 
 // Configure the HTTP request pipeline
