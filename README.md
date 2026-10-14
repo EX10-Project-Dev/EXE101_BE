@@ -66,6 +66,28 @@ Chạy các lệnh từ thư mục `EXE101_BE`.
 
 Migration `InitialVenueCatalog` tạo cấu trúc bảng cho địa điểm, danh mục, thẻ, tiện ích, giờ mở cửa, ngoại lệ giờ hoạt động và ảnh. Migration chỉ tạo/cập nhật **cấu trúc** database; nó không tự thêm dữ liệu địa điểm.
 
+## Tiến độ BE và việc tiếp theo
+
+### Đã hoàn thành
+
+- [x] Tạo cấu trúc backend 3 tầng và cấu hình `AppDbContext` với Entity Framework Core.
+- [x] Tạo migration cho catalog địa điểm và cấu hình nạp dữ liệu seed từ `DAL/Data/venue-seed.json` trong môi trường Development.
+- [x] Tạo endpoint `POST /api/v1/search/recommendations` và kiểm tra được bằng Swagger.
+- [x] Thêm lọc kết quả theo các tiêu chí đã có dữ liệu: giờ mở cửa, danh mục, ngân sách và khoảng cách; hỗ trợ phân trang và link Google Maps.
+- [x] Cấu hình kết nối Azure SQL trên máy phát triển. Connection string là cấu hình riêng, không commit; mỗi thành viên cần tự cấu hình và được cấp quyền truy cập Azure SQL.
+
+### Chưa hoàn thành / đề xuất làm tiếp
+
+- [ ] Tích hợp AI để phân tích `prompt` tự nhiên thành tiêu chí tìm kiếm có cấu trúc; giữ bộ lọc phía server làm nguồn quyết định kết quả, AI không tự bịa thông tin địa điểm.
+- [ ] Bổ sung đối chiếu mục đích, không gian, tiện ích và quy mô nhóm khi dữ liệu địa điểm có các trường này.
+- [ ] Tích hợp GPS hoặc nhận vị trí bắt đầu do client gửi; hiện API chỉ tính khoảng cách khi request có `origin`, chưa tự lấy GPS.
+- [ ] Bổ sung dữ liệu ảnh, giá, đánh giá và các thông tin còn thiếu khi nhóm có nguồn dữ liệu.
+- [ ] Kiểm tra quyền truy cập Azure SQL và cấu hình riêng trên máy từng thành viên trước khi FE gọi API.
+
+### Gợi ý bàn giao cho Khôi
+
+Đọc phần tiến độ này cùng `API/Controllers/SearchController.cs`, service tìm kiếm trong `BLL/Services/`, DTO request/response và `DAL/Data/venue-seed.json`. Việc tiếp theo phù hợp là thiết kế/tạo service phân tích prompt bằng AI, rồi ánh xạ kết quả phân tích vào tiêu chí search hiện có. Trước khi sửa, kiểm tra code hiện tại và thống nhất hợp đồng request/response với FE; không commit API key hoặc connection string.
+
 ## Dữ liệu 40 địa điểm
 
 Nhóm đã thu thập **40 địa điểm** cho bản MVP FIND&GO. Tệp `DAL/Data/venue-seed.json` chứa mã VEN-001 đến VEN-040 cùng tên, danh mục, địa chỉ và tọa độ lấy từ PDF/bảng tính. PDF/bảng tính gốc có thể nằm ngoài repository; cần chia sẻ riêng nếu muốn AI hoặc thành viên kiểm tra các trường khác.
