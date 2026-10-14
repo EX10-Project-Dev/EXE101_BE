@@ -21,3 +21,4 @@ publish*.zip
 
 ## [Environment / Local Config]
 appsettings.*.local.json
+appsettings.json

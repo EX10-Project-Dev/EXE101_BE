@@ -22,4 +22,8 @@
     <ProjectReference Include="..\DAL\DAL.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\DAL\Data\venue-seed.json" Link="Data\venue-seed.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

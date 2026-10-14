@@ -1,6 +1,7 @@
 using BLL.Mappings;
 using BLL.Interfaces;
 using BLL.Services;
+using API.Data;
 using DAL.Data;
 using DAL.Entities;
 using DAL.IRepositories;
@@ -10,6 +11,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Keep development logs in the console; writing to Windows Event Log requires elevated access.
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 
 // 1. Add Controllers
 builder.Services.AddControllers();
@@ -71,6 +76,20 @@ builder.Services.AddSwaggerGen(option =>
 });
 
 var app = builder.Build();
+
+if (app.Configuration.GetValue<bool>("SeedData:ImportVenueCatalogOnStartup"))
+{
+    await using (var schemaScope = app.Services.CreateAsyncScope())
+    {
+        var schemaDb = schemaScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await schemaDb.Database.ExecuteSqlRawAsync("IF COL_LENGTH('dbo.Venues', 'SourceDataJson') IS NULL ALTER TABLE [dbo].[Venues] ADD [SourceDataJson] nvarchar(max) NULL; IF NOT EXISTS (SELECT 1 FROM [__EFMigrationsHistory] WHERE [MigrationId] = '20261014143633_AddVenueSourceData') INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion]) VALUES ('20261014143633_AddVenueSourceData', '10.0.0');");
+    }
+
+    var seededVenueCount = await VenueCatalogSeeder.SeedAsync(
+        app.Services,
+        Path.Combine(AppContext.BaseDirectory, "Data", "venue-seed.json"));
+    Console.WriteLine($"Đã nạp {seededVenueCount} địa điểm từ bộ dữ liệu mẫu.");
+}
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())

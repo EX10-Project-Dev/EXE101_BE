@@ -26,6 +26,7 @@ namespace DAL.Data
 
             builder.Entity<Venue>(entity =>
             {
+                entity.Property(x => x.SourceId).HasMaxLength(50);
                 entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
                 entity.Property(x => x.Description).HasMaxLength(2000);
                 entity.Property(x => x.Address).HasMaxLength(500).IsRequired();
@@ -33,6 +34,7 @@ namespace DAL.Data
                 entity.Property(x => x.Longitude).HasPrecision(9, 6);
                 entity.Property(x => x.PriceMin).HasPrecision(12, 2);
                 entity.Property(x => x.PriceMax).HasPrecision(12, 2);
+                entity.Property(x => x.PriceNote).HasMaxLength(1000);
                 entity.Property(x => x.CurrencyCode).HasMaxLength(3).IsRequired();
                 entity.Property(x => x.GooglePlaceId).HasMaxLength(200);
                 entity.Property(x => x.WebsiteUrl).HasMaxLength(1000);
@@ -42,6 +44,7 @@ namespace DAL.Data
                 entity.Property(x => x.PriceBasis).HasConversion<string>().HasMaxLength(20);
                 entity.HasIndex(x => x.Status);
                 entity.HasIndex(x => x.CategoryId);
+                entity.HasIndex(x => x.SourceId).IsUnique().HasFilter("[SourceId] IS NOT NULL");
                 entity.HasOne(x => x.Category).WithMany(x => x.Venues).HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne<AppUser>().WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.SetNull);
                 entity.ToTable(t => t.HasCheckConstraint("CK_Venues_Latitude", "[Latitude] >= -90 AND [Latitude] <= 90"));
