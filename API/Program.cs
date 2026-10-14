@@ -35,9 +35,10 @@ builder.Services.AddIdentityCore<AppUser>(opt =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-// 4. Register Dependency Injection for DAL (UnitOfWork & Generic Repository)
+// 4. Register Dependency Injection for DAL (UnitOfWork & Repositories)
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IVenueRepository, VenueRepository>();
 
 // 5. Register AutoMapper
 builder.Services.AddAutoMapper(cfg =>
@@ -71,6 +72,22 @@ builder.Services.AddSwaggerGen(option =>
 });
 
 var app = builder.Build();
+
+// 9. Auto-seed 40 Venues on Startup
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        await DbInitializer.SeedAsync(context);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogWarning(ex, "DbInitializer was skipped or encountered an issue connecting to the database.");
+    }
+}
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())

@@ -1,0 +1,1767 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using DAL.Data;
+using DAL.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace DAL.Data;
+
+public static class DbInitializer
+{
+    public static async Task SeedAsync(AppDbContext context)
+    {
+        // 1. Seed Categories if empty
+        if (!await context.VenueCategories.AnyAsync())
+        {
+            var categories = new List<VenueCategory>
+            {
+                new() { Id = Guid.Parse("11111111-1111-1111-1111-111111111101"), Code = "CAFE", Name = "Cà phê", IsActive = true },
+                new() { Id = Guid.Parse("11111111-1111-1111-1111-111111111102"), Code = "RESTAURANT", Name = "Nhà hàng", IsActive = true },
+                new() { Id = Guid.Parse("11111111-1111-1111-1111-111111111103"), Code = "EATERY", Name = "Quán ăn", IsActive = true },
+                new() { Id = Guid.Parse("11111111-1111-1111-1111-111111111104"), Code = "TEA_BEVERAGE", Name = "Trà sữa / trà", IsActive = true },
+                new() { Id = Guid.Parse("11111111-1111-1111-1111-111111111105"), Code = "DESSERT", Name = "Tiệm bánh / tráng miệng", IsActive = true },
+                new() { Id = Guid.Parse("11111111-1111-1111-1111-111111111106"), Code = "ICE_CREAM", Name = "Cửa hàng kem", IsActive = true },
+                new() { Id = Guid.Parse("11111111-1111-1111-1111-111111111107"), Code = "OTHER", Name = "Khác", IsActive = true }
+            };
+            await context.VenueCategories.AddRangeAsync(categories);
+            await context.SaveChangesAsync();
+        }
+
+        // 2. Seed Amenities if empty
+        if (!await context.Amenities.AnyAsync())
+        {
+            var amenities = new List<Amenity>
+            {
+                new() { Id = Guid.Parse("22222222-2222-2222-2222-222222222201"), Code = "WIFI", Name = "Wi-Fi miễn phí", IsActive = true },
+                new() { Id = Guid.Parse("22222222-2222-2222-2222-222222222202"), Code = "POWER_OUTLET", Name = "Ổ cắm điện", IsActive = true },
+                new() { Id = Guid.Parse("22222222-2222-2222-2222-222222222203"), Code = "AIR_CONDITIONING", Name = "Máy lạnh / Điều hòa", IsActive = true },
+                new() { Id = Guid.Parse("22222222-2222-2222-2222-222222222204"), Code = "MOTORBIKE_PARKING", Name = "Chỗ để xe máy", IsActive = true },
+                new() { Id = Guid.Parse("22222222-2222-2222-2222-222222222205"), Code = "CAR_PARKING", Name = "Chỗ để ô tô", IsActive = true },
+                new() { Id = Guid.Parse("22222222-2222-2222-2222-222222222206"), Code = "GROUP_SEATING", Name = "Phù hợp nhóm 4+", IsActive = true }
+            };
+            await context.Amenities.AddRangeAsync(amenities);
+            await context.SaveChangesAsync();
+        }
+
+        // 3. Seed Tags if empty
+        if (!await context.VenueTags.AnyAsync())
+        {
+            var tags = new List<VenueTag>
+            {
+                new() { Id = Guid.Parse("33333333-3333-3333-3333-333333333301"), Code = "STUDY_WORK", Name = "Học bài / Làm việc", TagType = VenueTagType.Purpose },
+                new() { Id = Guid.Parse("33333333-3333-3333-3333-333333333302"), Code = "EAT_DRINK", Name = "Ăn uống", TagType = VenueTagType.Purpose },
+                new() { Id = Guid.Parse("33333333-3333-3333-3333-333333333303"), Code = "HANGOUT", Name = "Tụ tập bạn bè", TagType = VenueTagType.Purpose },
+                new() { Id = Guid.Parse("33333333-3333-3333-3333-333333333304"), Code = "DATE", Name = "Hẹn hò", TagType = VenueTagType.Purpose },
+                new() { Id = Guid.Parse("33333333-3333-3333-3333-333333333305"), Code = "GROUP_GATHERING", Name = "Họp nhóm", TagType = VenueTagType.Purpose },
+                new() { Id = Guid.Parse("33333333-3333-3333-3333-333333333306"), Code = "QUIET", Name = "Yên tĩnh", TagType = VenueTagType.Atmosphere },
+                new() { Id = Guid.Parse("33333333-3333-3333-3333-333333333307"), Code = "COZY", Name = "Ấm cúng", TagType = VenueTagType.Atmosphere },
+                new() { Id = Guid.Parse("33333333-3333-3333-3333-333333333308"), Code = "SOCIAL", Name = "Náo nhiệt", TagType = VenueTagType.Atmosphere },
+                new() { Id = Guid.Parse("33333333-3333-3333-3333-333333333309"), Code = "MODERATE", Name = "Vừa phải", TagType = VenueTagType.Atmosphere }
+            };
+            await context.VenueTags.AddRangeAsync(tags);
+            await context.SaveChangesAsync();
+        }
+
+        // 4. Seed Venues if empty
+        if (!await context.Venues.AnyAsync())
+        {
+            var categories = await context.VenueCategories.ToDictionaryAsync(c => c.Code, c => c.Id);
+            var amenities = await context.Amenities.ToDictionaryAsync(a => a.Code, a => a.Id);
+            var tags = await context.VenueTags.ToDictionaryAsync(t => t.Code, t => t.Id);
+
+            var venueList = new List<Venue>();
+
+            // [VEN-001] Chow Long - Tiệm Lẩu Bò Triều Châu
+            var v1 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444401"),
+                Name = @"Chow Long - Tiệm Lẩu Bò Triều Châu",
+                CategoryId = categories["RESTAURANT"],
+                Description = @"lẩu bò; ăn tối; nhóm bạn",
+                Address = @"29 Nguyễn Văn Tăng, Long Bình, Thành phố Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8473m,
+                Longitude = 106.8199m,
+                PriceMin = 100000m,
+                PriceMax = 200000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=Chow%20Long%20-%20Ti%E1%BB%87m%20L%E1%BA%A9u%20B%C3%B2%20Tri%E1%BB%81u%20Ch%C3%A2u",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/Chow%20Long%20-%20Ti%E1%BB%87m%20L%E1%BA%A9u%20B%C3%B2%20Tri%E1%BB%81u%20Ch%C3%A2u",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v1.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v1.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("16:30:00"),
+                    CloseTime = TimeOnly.Parse("23:59:00"),
+                    IsClosed = false
+                });
+            }
+            v1.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v1.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Chow+Long+Tiem+Lau+Bo+Trieu+Chau&amp;query_place_id=ChIJgXrzCAAndTERWBjEsI7ibSU", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v1.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v1.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Chow%20Long%20-%20Ti%E1%BB%87m%20L%E1%BA%A9u%20B%C3%B2%20Tri%E1%BB%81u%20Ch%C3%A2u", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v1.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v1.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Chow%20Long%20-%20Ti%E1%BB%87m%20L%E1%BA%A9u%20B%C3%B2%20Tri%E1%BB%81u%20Ch%C3%A2u+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v1.Amenities.Add(new VenueAmenityLink { VenueId = v1.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v1.Amenities.Add(new VenueAmenityLink { VenueId = v1.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v1.Amenities.Add(new VenueAmenityLink { VenueId = v1.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v1.Amenities.Add(new VenueAmenityLink { VenueId = v1.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v1.Amenities.Add(new VenueAmenityLink { VenueId = v1.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v1.Amenities.Add(new VenueAmenityLink { VenueId = v1.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v1.Tags.Add(new VenueTagLink { VenueId = v1.Id, VenueTagId = tags["EAT_DRINK"] });
+            v1.Tags.Add(new VenueTagLink { VenueId = v1.Id, VenueTagId = tags["SOCIAL"] });
+            venueList.Add(v1);
+
+            // [VEN-002] Cơm Tấm Làng
+            var v2 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444402"),
+                Name = @"Cơm Tấm Làng",
+                CategoryId = categories["EATERY"],
+                Description = @"ăn trưa; ăn tối; cơm phần",
+                Address = @"163 Nguyễn Văn Tăng, Long Bình, Thành phố Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8479m,
+                Longitude = 106.8205m,
+                PriceMin = 35000m,
+                PriceMax = 60000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=C%C6%A1m%20T%E1%BA%A5m%20L%C3%A0ng",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/C%C6%A1m%20T%E1%BA%A5m%20L%C3%A0ng",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v2.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v2.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("06:00:00"),
+                    CloseTime = TimeOnly.Parse("21:00:00"),
+                    IsClosed = false
+                });
+            }
+            v2.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v2.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Com+Tam+Lang&amp;query_place_id=ChIJLazWIY4ndTERv-YjMOE81EM", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v2.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v2.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=C%C6%A1m%20T%E1%BA%A5m%20L%C3%A0ng", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v2.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v2.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=C%C6%A1m%20T%E1%BA%A5m%20L%C3%A0ng+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v2.Amenities.Add(new VenueAmenityLink { VenueId = v2.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v2.Amenities.Add(new VenueAmenityLink { VenueId = v2.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v2.Amenities.Add(new VenueAmenityLink { VenueId = v2.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v2.Amenities.Add(new VenueAmenityLink { VenueId = v2.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v2.Amenities.Add(new VenueAmenityLink { VenueId = v2.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v2.Amenities.Add(new VenueAmenityLink { VenueId = v2.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v2.Tags.Add(new VenueTagLink { VenueId = v2.Id, VenueTagId = tags["EAT_DRINK"] });
+            v2.Tags.Add(new VenueTagLink { VenueId = v2.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v2);
+
+            // [VEN-003] Hải Sản Út Linh 2
+            var v3 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444403"),
+                Name = @"Hải Sản Út Linh 2",
+                CategoryId = categories["RESTAURANT"],
+                Description = @"hải sản; ăn nhóm",
+                Address = @"57 Lã Xuân Oai, phường Tăng Nhơn Phú, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8355m,
+                Longitude = 106.7981m,
+                PriceMin = 100000m,
+                PriceMax = 200000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=H%E1%BA%A3i%20S%E1%BA%A3n%20%C3%9At%20Linh%202",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/H%E1%BA%A3i%20S%E1%BA%A3n%20%C3%9At%20Linh%202",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v3.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v3.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("08:00:00"),
+                    CloseTime = TimeOnly.Parse("23:00:00"),
+                    IsClosed = false
+                });
+            }
+            v3.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v3.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Hai+San+Ut+Linh+2&amp;query_place_id=ChIJx4Y_bBYndTER_HNMo5mN-Ro", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v3.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v3.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=H%E1%BA%A3i%20S%E1%BA%A3n%20%C3%9At%20Linh%202", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v3.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v3.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=H%E1%BA%A3i%20S%E1%BA%A3n%20%C3%9At%20Linh%202+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v3.Amenities.Add(new VenueAmenityLink { VenueId = v3.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v3.Amenities.Add(new VenueAmenityLink { VenueId = v3.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v3.Amenities.Add(new VenueAmenityLink { VenueId = v3.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v3.Tags.Add(new VenueTagLink { VenueId = v3.Id, VenueTagId = tags["EAT_DRINK"] });
+            v3.Tags.Add(new VenueTagLink { VenueId = v3.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v3);
+
+            // [VEN-004] The Rice Z
+            var v4 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444404"),
+                Name = @"The Rice Z",
+                CategoryId = categories["RESTAURANT"],
+                Description = @"ăn chính; cơm/món Á; gặp bạn",
+                Address = @"305 Võ Văn Hát, phường Long Trường, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8246m,
+                Longitude = 106.8247m,
+                PriceMin = 100000m,
+                PriceMax = 200000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=The%20Rice%20Z",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/The%20Rice%20Z",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v4.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v4.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("10:00:00"),
+                    CloseTime = TimeOnly.Parse("21:00:00"),
+                    IsClosed = false
+                });
+            }
+            v4.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v4.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=The+Rice+Z&amp;query_place_id=ChIJjcgZKwAndTERqBF1LAkf-C0", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v4.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v4.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=The%20Rice%20Z", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v4.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v4.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=The%20Rice%20Z+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v4.Amenities.Add(new VenueAmenityLink { VenueId = v4.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v4.Amenities.Add(new VenueAmenityLink { VenueId = v4.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v4.Amenities.Add(new VenueAmenityLink { VenueId = v4.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v4.Tags.Add(new VenueTagLink { VenueId = v4.Id, VenueTagId = tags["EAT_DRINK"] });
+            v4.Tags.Add(new VenueTagLink { VenueId = v4.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v4);
+
+            // [VEN-005] Kem Dẻo Tràng Tiền
+            var v5 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444405"),
+                Name = @"Kem Dẻo Tràng Tiền",
+                CategoryId = categories["DESSERT"],
+                Description = @"ăn vặt; tráng miệng; gặp bạn",
+                Address = @"4 Đường số 17, phường Linh Xuân, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8662m,
+                Longitude = 106.7668m,
+                PriceMin = 30000m,
+                PriceMax = 65000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=Kem%20D%E1%BA%BBo%20Tr%C3%A0ng%20Ti%E1%BB%81n",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/Kem%20D%E1%BA%BBo%20Tr%C3%A0ng%20Ti%E1%BB%81n",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v5.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v5.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("09:00:00"),
+                    CloseTime = TimeOnly.Parse("22:30:00"),
+                    IsClosed = false
+                });
+            }
+            v5.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v5.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Kem+Deo+Trang+Tien&amp;query_place_id=ChIJBXlNTgAndTERX8uGya0BEfU", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v5.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v5.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Kem%20D%E1%BA%BBo%20Tr%C3%A0ng%20Ti%E1%BB%81n", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v5.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v5.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Kem%20D%E1%BA%BBo%20Tr%C3%A0ng%20Ti%E1%BB%81n+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v5.Amenities.Add(new VenueAmenityLink { VenueId = v5.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v5.Amenities.Add(new VenueAmenityLink { VenueId = v5.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v5.Amenities.Add(new VenueAmenityLink { VenueId = v5.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v5.Tags.Add(new VenueTagLink { VenueId = v5.Id, VenueTagId = tags["EAT_DRINK"] });
+            v5.Tags.Add(new VenueTagLink { VenueId = v5.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v5);
+
+            // [VEN-006] SoGood Milktea & More
+            var v6 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444406"),
+                Name = @"SoGood Milktea & More",
+                CategoryId = categories["TEA_BEVERAGE"],
+                Description = @"trà sữa; ăn nhẹ; gặp bạn",
+                Address = @"135/3 Đường 14, phường Tăng Nhơn Phú, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8403m,
+                Longitude = 106.7814m,
+                PriceMin = 30000m,
+                PriceMax = 65000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=SoGood%20Milktea%20%26amp%3B%20More",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/SoGood%20Milktea%20%26amp%3B%20More",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v6.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v6.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("10:00:00"),
+                    CloseTime = TimeOnly.Parse("22:00:00"),
+                    IsClosed = false
+                });
+            }
+            v6.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v6.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=SoGood+Milktea+More&amp;query_place_id=ChIJATSyXwAndTERLSGxVLzyEsI", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v6.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v6.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=SoGood%20Milktea%20%26amp%3B%20More", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v6.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v6.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=SoGood%20Milktea%20%26amp%3B%20More+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v6.Amenities.Add(new VenueAmenityLink { VenueId = v6.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v6.Amenities.Add(new VenueAmenityLink { VenueId = v6.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v6.Amenities.Add(new VenueAmenityLink { VenueId = v6.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v6.Amenities.Add(new VenueAmenityLink { VenueId = v6.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v6.Tags.Add(new VenueTagLink { VenueId = v6.Id, VenueTagId = tags["HANGOUT"] });
+            v6.Tags.Add(new VenueTagLink { VenueId = v6.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v6);
+
+            // [VEN-007] Phở Tình Tây
+            var v7 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444407"),
+                Name = @"Phở Tình Tây",
+                CategoryId = categories["EATERY"],
+                Description = @"ăn sáng; ăn chính; phở",
+                Address = @"Đường 5B, số 7, Long Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8522m,
+                Longitude = 106.834m,
+                PriceMin = 35000m,
+                PriceMax = 60000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=Ph%E1%BB%9F%20T%C3%ACnh%20T%C3%A2y",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/Ph%E1%BB%9F%20T%C3%ACnh%20T%C3%A2y",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v7.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v7.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("06:00:00"),
+                    CloseTime = TimeOnly.Parse("14:30:00"),
+                    IsClosed = false
+                });
+            }
+            v7.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v7.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Pho+Tinh+Tay&amp;query_place_id=ChIJ9QTKDgAhdTERpZtWrXbE2CM", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v7.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v7.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Ph%E1%BB%9F%20T%C3%ACnh%20T%C3%A2y", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v7.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v7.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Ph%E1%BB%9F%20T%C3%ACnh%20T%C3%A2y+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v7.Amenities.Add(new VenueAmenityLink { VenueId = v7.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v7.Amenities.Add(new VenueAmenityLink { VenueId = v7.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v7.Amenities.Add(new VenueAmenityLink { VenueId = v7.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v7.Amenities.Add(new VenueAmenityLink { VenueId = v7.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v7.Amenities.Add(new VenueAmenityLink { VenueId = v7.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v7.Amenities.Add(new VenueAmenityLink { VenueId = v7.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v7.Tags.Add(new VenueTagLink { VenueId = v7.Id, VenueTagId = tags["EAT_DRINK"] });
+            v7.Tags.Add(new VenueTagLink { VenueId = v7.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v7);
+
+            // [VEN-008] Trà sữa TRẠM - Milk Tea & Coffee
+            var v8 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444408"),
+                Name = @"Trà sữa TRẠM - Milk Tea & Coffee",
+                CategoryId = categories["TEA_BEVERAGE"],
+                Description = @"trà sữa; cà phê; gặp bạn",
+                Address = @"16 Đình Phong Phú, phường Tăng Nhơn Phú, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8413m,
+                Longitude = 106.7816m,
+                PriceMin = 30000m,
+                PriceMax = 65000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=Tr%C3%A0%20s%E1%BB%AFa%20TR%E1%BA%A0M%20-%20Milk%20Tea%20%26amp%3B%20Coffee",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/Tr%C3%A0%20s%E1%BB%AFa%20TR%E1%BA%A0M%20-%20Milk%20Tea%20%26amp%3B%20Coffee",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v8.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v8.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("06:30:00"),
+                    CloseTime = TimeOnly.Parse("23:00:00"),
+                    IsClosed = false
+                });
+            }
+            v8.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v8.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Tra+sua+TRAM+Milk+Tea+Coffee&amp;query_place_id=ChIJH0Jd_zwndTER0FWWvLZ0Lcw", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v8.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v8.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Tr%C3%A0%20s%E1%BB%AFa%20TR%E1%BA%A0M%20-%20Milk%20Tea%20%26amp%3B%20Coffee", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v8.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v8.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Tr%C3%A0%20s%E1%BB%AFa%20TR%E1%BA%A0M%20-%20Milk%20Tea%20%26amp%3B%20Coffee+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v8.Amenities.Add(new VenueAmenityLink { VenueId = v8.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v8.Amenities.Add(new VenueAmenityLink { VenueId = v8.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v8.Amenities.Add(new VenueAmenityLink { VenueId = v8.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v8.Amenities.Add(new VenueAmenityLink { VenueId = v8.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v8.Tags.Add(new VenueTagLink { VenueId = v8.Id, VenueTagId = tags["HANGOUT"] });
+            v8.Tags.Add(new VenueTagLink { VenueId = v8.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v8);
+
+            // [VEN-009] Le Pierro’s Bakery & Coffee Shop
+            var v9 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444409"),
+                Name = @"Le Pierro’s Bakery & Coffee Shop",
+                CategoryId = categories["CAFE"],
+                Description = @"bánh; cà phê; ăn nhẹ",
+                Address = @"The Origami, 03 Nguyễn Xiển, Vinhomes Grand Park, Long Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8486m,
+                Longitude = 106.8387m,
+                PriceMin = 30000m,
+                PriceMax = 65000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=Le%20Pierro%E2%80%99s%20Bakery%20%26amp%3B%20Coffee%20Shop",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/Le%20Pierro%E2%80%99s%20Bakery%20%26amp%3B%20Coffee%20Shop",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v9.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v9.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("07:30:00"),
+                    CloseTime = TimeOnly.Parse("20:00:00"),
+                    IsClosed = false
+                });
+            }
+            v9.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v9.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Le+Pierros+Bakery+Coffee+Shop&amp;query_place_id=ChIJhRD5EAAhdTER_yv6GCyO7kE", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v9.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v9.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Le%20Pierro%E2%80%99s%20Bakery%20%26amp%3B%20Coffee%20Shop", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v9.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v9.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Le%20Pierro%E2%80%99s%20Bakery%20%26amp%3B%20Coffee%20Shop+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v9.Amenities.Add(new VenueAmenityLink { VenueId = v9.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v9.Amenities.Add(new VenueAmenityLink { VenueId = v9.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v9.Amenities.Add(new VenueAmenityLink { VenueId = v9.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v9.Amenities.Add(new VenueAmenityLink { VenueId = v9.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v9.Amenities.Add(new VenueAmenityLink { VenueId = v9.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v9.Amenities.Add(new VenueAmenityLink { VenueId = v9.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v9.Tags.Add(new VenueTagLink { VenueId = v9.Id, VenueTagId = tags["STUDY_WORK"] });
+            v9.Tags.Add(new VenueTagLink { VenueId = v9.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v9);
+
+            // [VEN-010] Thủy Vân Ký S605 Vinhomes Grand Park
+            var v10 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444410"),
+                Name = @"Thủy Vân Ký S605 Vinhomes Grand Park",
+                CategoryId = categories["EATERY"],
+                Description = @"mì; ăn sáng; ăn chính",
+                Address = @"01S06 - S6.05 Origami, Vinhomes Grand Park, Long Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.845m,
+                Longitude = 106.82m,
+                PriceMin = 35000m,
+                PriceMax = 60000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=Th%E1%BB%A7y%20V%C3%A2n%20K%C3%BD%20S605%20Vinhomes%20Grand%20Park",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/Th%E1%BB%A7y%20V%C3%A2n%20K%C3%BD%20S605%20Vinhomes%20Grand%20Park",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v10.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v10.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("07:00:00"),
+                    CloseTime = TimeOnly.Parse("21:00:00"),
+                    IsClosed = false
+                });
+            }
+            v10.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v10.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Thuy+Van+Ky+S605+Vinhomes+Grand+Park&amp;query_place_id=ChIJo7dmFrYhdTERQrDCYdOKMkY", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v10.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v10.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Th%E1%BB%A7y%20V%C3%A2n%20K%C3%BD%20S605%20Vinhomes%20Grand%20Park", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v10.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v10.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Th%E1%BB%A7y%20V%C3%A2n%20K%C3%BD%20S605%20Vinhomes%20Grand%20Park+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v10.Amenities.Add(new VenueAmenityLink { VenueId = v10.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v10.Amenities.Add(new VenueAmenityLink { VenueId = v10.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v10.Amenities.Add(new VenueAmenityLink { VenueId = v10.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v10.Amenities.Add(new VenueAmenityLink { VenueId = v10.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v10.Amenities.Add(new VenueAmenityLink { VenueId = v10.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v10.Amenities.Add(new VenueAmenityLink { VenueId = v10.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v10.Tags.Add(new VenueTagLink { VenueId = v10.Id, VenueTagId = tags["EAT_DRINK"] });
+            v10.Tags.Add(new VenueTagLink { VenueId = v10.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v10);
+
+            // [VEN-011] Nhà hàng WASABI
+            var v11 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444411"),
+                Name = @"Nhà hàng WASABI",
+                CategoryId = categories["RESTAURANT"],
+                Description = @"món Nhật; ăn chính; nhóm bạn",
+                Address = @"S10 07 Origami, Vinhomes Grand Park, Long Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.845m,
+                Longitude = 106.82m,
+                PriceMin = 100000m,
+                PriceMax = 600000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=Nh%C3%A0%20h%C3%A0ng%20WASABI",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/Nh%C3%A0%20h%C3%A0ng%20WASABI",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v11.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v11.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("10:00:00"),
+                    CloseTime = TimeOnly.Parse("14:00:00"),
+                    IsClosed = false
+                });
+            }
+            v11.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v11.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Nha+hang+WASABI&amp;query_place_id=ChIJTUqXBwAhdTER7razRA9nIeI", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v11.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v11.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Nh%C3%A0%20h%C3%A0ng%20WASABI", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v11.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v11.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Nh%C3%A0%20h%C3%A0ng%20WASABI+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v11.Amenities.Add(new VenueAmenityLink { VenueId = v11.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v11.Amenities.Add(new VenueAmenityLink { VenueId = v11.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v11.Amenities.Add(new VenueAmenityLink { VenueId = v11.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v11.Amenities.Add(new VenueAmenityLink { VenueId = v11.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v11.Amenities.Add(new VenueAmenityLink { VenueId = v11.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v11.Amenities.Add(new VenueAmenityLink { VenueId = v11.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v11.Tags.Add(new VenueTagLink { VenueId = v11.Id, VenueTagId = tags["EAT_DRINK"] });
+            v11.Tags.Add(new VenueTagLink { VenueId = v11.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v11);
+
+            // [VEN-012] Thai Market Restaurant - Vincom Lê Văn Việt
+            var v12 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444412"),
+                Name = @"Thai Market Restaurant - Vincom Lê Văn Việt",
+                CategoryId = categories["RESTAURANT"],
+                Description = @"món Thái; ăn chính; nhóm bạn",
+                Address = @"50 Đường Lê Văn Việt, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.845m,
+                Longitude = 106.82m,
+                PriceMin = 200000m,
+                PriceMax = 300000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=Thai%20Market%20Restaurant%20-%20Vincom%20L%C3%AA%20V%C4%83n%20Vi%E1%BB%87t",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/Thai%20Market%20Restaurant%20-%20Vincom%20L%C3%AA%20V%C4%83n%20Vi%E1%BB%87t",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v12.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v12.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("10:30:00"),
+                    CloseTime = TimeOnly.Parse("21:30:00"),
+                    IsClosed = false
+                });
+            }
+            v12.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v12.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Thai+Market+Restaurant+Vincom+Le+Van+Viet&amp;query_place_id=ChIJrRlxEwAndTERYo5hGONpuSo", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v12.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v12.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Thai%20Market%20Restaurant%20-%20Vincom%20L%C3%AA%20V%C4%83n%20Vi%E1%BB%87t", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v12.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v12.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Thai%20Market%20Restaurant%20-%20Vincom%20L%C3%AA%20V%C4%83n%20Vi%E1%BB%87t+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v12.Amenities.Add(new VenueAmenityLink { VenueId = v12.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v12.Amenities.Add(new VenueAmenityLink { VenueId = v12.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v12.Amenities.Add(new VenueAmenityLink { VenueId = v12.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v12.Tags.Add(new VenueTagLink { VenueId = v12.Id, VenueTagId = tags["EAT_DRINK"] });
+            v12.Tags.Add(new VenueTagLink { VenueId = v12.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v12);
+
+            // [VEN-013] TIỆM PHỞ GIA TRUYỀN 1979
+            var v13 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444413"),
+                Name = @"TIỆM PHỞ GIA TRUYỀN 1979",
+                CategoryId = categories["EATERY"],
+                Description = @"ăn sáng; phở; ăn nhanh",
+                Address = @"14 Đường D9, Vinhomes Grand Park, Long Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8463m,
+                Longitude = 106.8394m,
+                PriceMin = 35000m,
+                PriceMax = 60000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=TI%E1%BB%86M%20PH%E1%BB%9E%20GIA%20TRUY%E1%BB%80N%201979",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/TI%E1%BB%86M%20PH%E1%BB%9E%20GIA%20TRUY%E1%BB%80N%201979",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v13.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v13.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("06:00:00"),
+                    CloseTime = TimeOnly.Parse("13:00:00"),
+                    IsClosed = false
+                });
+            }
+            v13.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v13.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=TIEM+PHO+GIA+TRUYEN+1979&amp;query_place_id=ChIJdSSQHQAhdTERjO9Qxxc06ug", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v13.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v13.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=TI%E1%BB%86M%20PH%E1%BB%9E%20GIA%20TRUY%E1%BB%80N%201979", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v13.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v13.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=TI%E1%BB%86M%20PH%E1%BB%9E%20GIA%20TRUY%E1%BB%80N%201979+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v13.Amenities.Add(new VenueAmenityLink { VenueId = v13.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v13.Amenities.Add(new VenueAmenityLink { VenueId = v13.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v13.Amenities.Add(new VenueAmenityLink { VenueId = v13.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v13.Amenities.Add(new VenueAmenityLink { VenueId = v13.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v13.Amenities.Add(new VenueAmenityLink { VenueId = v13.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v13.Amenities.Add(new VenueAmenityLink { VenueId = v13.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v13.Tags.Add(new VenueTagLink { VenueId = v13.Id, VenueTagId = tags["EAT_DRINK"] });
+            v13.Tags.Add(new VenueTagLink { VenueId = v13.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v13);
+
+            // [VEN-014] Vintage Taste Deli Cafe
+            var v14 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444414"),
+                Name = @"Vintage Taste Deli Cafe",
+                CategoryId = categories["CAFE"],
+                Description = @"cà phê; gặp bạn; ăn nhẹ",
+                Address = @"28 Đường D9, Vinhomes Grand Park, Long Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8427m,
+                Longitude = 106.84m,
+                PriceMin = 30000m,
+                PriceMax = 65000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=Vintage%20Taste%20Deli%20Cafe",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/Vintage%20Taste%20Deli%20Cafe",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v14.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v14.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("06:30:00"),
+                    CloseTime = TimeOnly.Parse("20:00:00"),
+                    IsClosed = false
+                });
+            }
+            v14.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v14.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Vintage+Taste+Deli+Cafe&amp;query_place_id=ChIJ9chA0gshdTERkKJl2cm6IDM", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v14.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v14.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Vintage%20Taste%20Deli%20Cafe", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v14.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v14.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Vintage%20Taste%20Deli%20Cafe+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v14.Amenities.Add(new VenueAmenityLink { VenueId = v14.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v14.Amenities.Add(new VenueAmenityLink { VenueId = v14.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v14.Amenities.Add(new VenueAmenityLink { VenueId = v14.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v14.Amenities.Add(new VenueAmenityLink { VenueId = v14.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v14.Amenities.Add(new VenueAmenityLink { VenueId = v14.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v14.Amenities.Add(new VenueAmenityLink { VenueId = v14.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v14.Tags.Add(new VenueTagLink { VenueId = v14.Id, VenueTagId = tags["STUDY_WORK"] });
+            v14.Tags.Add(new VenueTagLink { VenueId = v14.Id, VenueTagId = tags["QUIET"] });
+            venueList.Add(v14);
+
+            // [VEN-015] CHAGEE Vinhomes Grand Park
+            var v15 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444415"),
+                Name = @"CHAGEE Vinhomes Grand Park",
+                CategoryId = categories["TEA_BEVERAGE"],
+                Description = @"trà; đồ uống; gặp bạn",
+                Address = @"101, S05/88 Phước Thiện, Vinhomes Grand Park, Long Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8503m,
+                Longitude = 106.8433m,
+                PriceMin = 30000m,
+                PriceMax = 65000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=CHAGEE%20Vinhomes%20Grand%20Park",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/CHAGEE%20Vinhomes%20Grand%20Park",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v15.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v15.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("09:00:00"),
+                    CloseTime = TimeOnly.Parse("22:00:00"),
+                    IsClosed = false
+                });
+            }
+            v15.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v15.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=CHAGEE+Vinhomes+Grand+Park&amp;query_place_id=ChIJlQsXGwAhdTERg-jcX_s8g2I", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v15.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v15.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=CHAGEE%20Vinhomes%20Grand%20Park", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v15.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v15.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=CHAGEE%20Vinhomes%20Grand%20Park+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v15.Amenities.Add(new VenueAmenityLink { VenueId = v15.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v15.Amenities.Add(new VenueAmenityLink { VenueId = v15.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v15.Amenities.Add(new VenueAmenityLink { VenueId = v15.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v15.Amenities.Add(new VenueAmenityLink { VenueId = v15.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v15.Amenities.Add(new VenueAmenityLink { VenueId = v15.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v15.Amenities.Add(new VenueAmenityLink { VenueId = v15.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v15.Tags.Add(new VenueTagLink { VenueId = v15.Id, VenueTagId = tags["HANGOUT"] });
+            v15.Tags.Add(new VenueTagLink { VenueId = v15.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v15);
+
+            // [VEN-016] Quán ăn Mê Món
+            var v16 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444416"),
+                Name = @"Quán ăn Mê Món",
+                CategoryId = categories["RESTAURANT"],
+                Description = @"món Việt; ăn chính; nhóm bạn",
+                Address = @"Shophouse 01S11, tòa GH5 Glory Heights, Vinhomes Grand Park, Long Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8432m,
+                Longitude = 106.8374m,
+                PriceMin = 150000m,
+                PriceMax = 250000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=Qu%C3%A1n%20%C4%83n%20M%C3%AA%20M%C3%B3n",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/Qu%C3%A1n%20%C4%83n%20M%C3%AA%20M%C3%B3n",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v16.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v16.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("10:00:00"),
+                    CloseTime = TimeOnly.Parse("15:00:00"),
+                    IsClosed = false
+                });
+            }
+            v16.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v16.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Quan+an+Me+Mon&amp;query_place_id=ChIJL5QeRQAhdTERdi_5fYjMWIY", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v16.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v16.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Qu%C3%A1n%20%C4%83n%20M%C3%AA%20M%C3%B3n", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v16.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v16.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Qu%C3%A1n%20%C4%83n%20M%C3%AA%20M%C3%B3n+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v16.Amenities.Add(new VenueAmenityLink { VenueId = v16.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v16.Amenities.Add(new VenueAmenityLink { VenueId = v16.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v16.Amenities.Add(new VenueAmenityLink { VenueId = v16.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v16.Amenities.Add(new VenueAmenityLink { VenueId = v16.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v16.Amenities.Add(new VenueAmenityLink { VenueId = v16.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v16.Amenities.Add(new VenueAmenityLink { VenueId = v16.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v16.Tags.Add(new VenueTagLink { VenueId = v16.Id, VenueTagId = tags["EAT_DRINK"] });
+            v16.Tags.Add(new VenueTagLink { VenueId = v16.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v16);
+
+            // [VEN-017] DaHú hotpot Vincom Mega Mall
+            var v17 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444417"),
+                Name = @"DaHú hotpot Vincom Mega Mall",
+                CategoryId = categories["RESTAURANT"],
+                Description = @"lẩu; ăn nhóm; ăn tối",
+                Address = @"Vincom Mega Mall Grand Park, 88 Phước Thiện, Long Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8458m,
+                Longitude = 106.8402m,
+                PriceMin = 150000m,
+                PriceMax = 250000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=DaH%C3%BA%20hotpot%20Vincom%20Mega%20Mall",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/DaH%C3%BA%20hotpot%20Vincom%20Mega%20Mall",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v17.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v17.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("10:00:00"),
+                    CloseTime = TimeOnly.Parse("22:00:00"),
+                    IsClosed = false
+                });
+            }
+            v17.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v17.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=DaHu+hotpot+Vincom+Mega+Mall&amp;query_place_id=ChIJP2xXagAhdTERqmW6FFnTmjQ", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v17.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v17.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=DaH%C3%BA%20hotpot%20Vincom%20Mega%20Mall", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v17.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v17.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=DaH%C3%BA%20hotpot%20Vincom%20Mega%20Mall+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v17.Amenities.Add(new VenueAmenityLink { VenueId = v17.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v17.Amenities.Add(new VenueAmenityLink { VenueId = v17.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v17.Amenities.Add(new VenueAmenityLink { VenueId = v17.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v17.Amenities.Add(new VenueAmenityLink { VenueId = v17.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v17.Amenities.Add(new VenueAmenityLink { VenueId = v17.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v17.Amenities.Add(new VenueAmenityLink { VenueId = v17.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v17.Tags.Add(new VenueTagLink { VenueId = v17.Id, VenueTagId = tags["EAT_DRINK"] });
+            v17.Tags.Add(new VenueTagLink { VenueId = v17.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v17);
+
+            // [VEN-018] Vị Nhà - Tinh hoa ẩm thực 3 miền
+            var v18 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444418"),
+                Name = @"Vị Nhà - Tinh hoa ẩm thực 3 miền",
+                CategoryId = categories["RESTAURANT"],
+                Description = @"món Việt; cơm; ăn gia đình",
+                Address = @"RRQV+96X, Đường T10, Long Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8421m,
+                Longitude = 106.8431m,
+                PriceMin = 150000m,
+                PriceMax = 250000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=V%E1%BB%8B%20Nh%C3%A0%20-%20Tinh%20hoa%20%E1%BA%A9m%20th%E1%BB%B1c%203%20mi%E1%BB%81n",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/V%E1%BB%8B%20Nh%C3%A0%20-%20Tinh%20hoa%20%E1%BA%A9m%20th%E1%BB%B1c%203%20mi%E1%BB%81n",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v18.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v18.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("06:00:00"),
+                    CloseTime = TimeOnly.Parse("21:00:00"),
+                    IsClosed = false
+                });
+            }
+            v18.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v18.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Vi+Nha+Tinh+hoa+am+thuc+3+mien&amp;query_place_id=ChIJ4_nXBAAhdTER75auB9lf0-o", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v18.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v18.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=V%E1%BB%8B%20Nh%C3%A0%20-%20Tinh%20hoa%20%E1%BA%A9m%20th%E1%BB%B1c%203%20mi%E1%BB%81n", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v18.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v18.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=V%E1%BB%8B%20Nh%C3%A0%20-%20Tinh%20hoa%20%E1%BA%A9m%20th%E1%BB%B1c%203%20mi%E1%BB%81n+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v18.Amenities.Add(new VenueAmenityLink { VenueId = v18.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v18.Amenities.Add(new VenueAmenityLink { VenueId = v18.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v18.Amenities.Add(new VenueAmenityLink { VenueId = v18.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v18.Amenities.Add(new VenueAmenityLink { VenueId = v18.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v18.Amenities.Add(new VenueAmenityLink { VenueId = v18.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v18.Amenities.Add(new VenueAmenityLink { VenueId = v18.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v18.Tags.Add(new VenueTagLink { VenueId = v18.Id, VenueTagId = tags["EAT_DRINK"] });
+            v18.Tags.Add(new VenueTagLink { VenueId = v18.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v18);
+
+            // [VEN-019] Cơm Niêu Bà Chang
+            var v19 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444419"),
+                Name = @"Cơm Niêu Bà Chang",
+                CategoryId = categories["RESTAURANT"],
+                Description = @"cơm; ăn chính; ăn nhóm",
+                Address = @"47 Đường T2, Long Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.842m,
+                Longitude = 106.8442m,
+                PriceMin = 150000m,
+                PriceMax = 250000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=C%C6%A1m%20Ni%C3%AAu%20B%C3%A0%20Chang",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/C%C6%A1m%20Ni%C3%AAu%20B%C3%A0%20Chang",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v19.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v19.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("08:00:00"),
+                    CloseTime = TimeOnly.Parse("22:00:00"),
+                    IsClosed = false
+                });
+            }
+            v19.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v19.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Com+Nieu+Ba+Chang&amp;query_place_id=ChIJpUYFFwAhdTERbRWQrD4olNI", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v19.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v19.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=C%C6%A1m%20Ni%C3%AAu%20B%C3%A0%20Chang", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v19.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v19.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=C%C6%A1m%20Ni%C3%AAu%20B%C3%A0%20Chang+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v19.Amenities.Add(new VenueAmenityLink { VenueId = v19.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v19.Amenities.Add(new VenueAmenityLink { VenueId = v19.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v19.Amenities.Add(new VenueAmenityLink { VenueId = v19.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v19.Amenities.Add(new VenueAmenityLink { VenueId = v19.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v19.Amenities.Add(new VenueAmenityLink { VenueId = v19.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v19.Amenities.Add(new VenueAmenityLink { VenueId = v19.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v19.Tags.Add(new VenueTagLink { VenueId = v19.Id, VenueTagId = tags["EAT_DRINK"] });
+            v19.Tags.Add(new VenueTagLink { VenueId = v19.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v19);
+
+            // [VEN-020] New Zealand Ice Cream - Megamall Grand Park
+            var v20 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444420"),
+                Name = @"New Zealand Ice Cream - Megamall Grand Park",
+                CategoryId = categories["ICE_CREAM"],
+                Description = @"kem; tráng miệng; ăn vặt",
+                Address = @"Vincom Mega Mall Grand Park, 88 Phước Thiện, Long Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8476m,
+                Longitude = 106.839m,
+                PriceMin = 30000m,
+                PriceMax = 65000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=New%20Zealand%20Ice%20Cream%20-%20Megamall%20Grand%20Park",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/New%20Zealand%20Ice%20Cream%20-%20Megamall%20Grand%20Park",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v20.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v20.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("09:00:00"),
+                    CloseTime = TimeOnly.Parse("22:00:00"),
+                    IsClosed = false
+                });
+            }
+            v20.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v20.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=New+Zealand+Ice+Cream+Megamall+Grand+Park&amp;query_place_id=ChIJm4o0bHIhdTERLsqOi2oyOo8", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v20.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v20.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=New%20Zealand%20Ice%20Cream%20-%20Megamall%20Grand%20Park", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v20.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v20.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=New%20Zealand%20Ice%20Cream%20-%20Megamall%20Grand%20Park+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v20.Amenities.Add(new VenueAmenityLink { VenueId = v20.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v20.Amenities.Add(new VenueAmenityLink { VenueId = v20.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v20.Amenities.Add(new VenueAmenityLink { VenueId = v20.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v20.Amenities.Add(new VenueAmenityLink { VenueId = v20.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v20.Amenities.Add(new VenueAmenityLink { VenueId = v20.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v20.Amenities.Add(new VenueAmenityLink { VenueId = v20.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v20.Tags.Add(new VenueTagLink { VenueId = v20.Id, VenueTagId = tags["EAT_DRINK"] });
+            v20.Tags.Add(new VenueTagLink { VenueId = v20.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v20);
+
+            // [VEN-021] Khải Phong Dimsum - Mì tươi kéo sợi - Dessert
+            var v21 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444421"),
+                Name = @"Khải Phong Dimsum - Mì tươi kéo sợi - Dessert",
+                CategoryId = categories["RESTAURANT"],
+                Description = @"dimsum; mì; ăn sáng; tráng miệng",
+                Address = @"Đường T10/27 Manhattan, Vinhomes Grand Park, Long Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8397m,
+                Longitude = 106.8419m,
+                PriceMin = 150000m,
+                PriceMax = 250000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=Kh%E1%BA%A3i%20Phong%20Dimsum%20-%20M%C3%AC%20t%C6%B0%C6%A1i%20k%C3%A9o%20s%E1%BB%A3i%20-%20Dessert",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/Kh%E1%BA%A3i%20Phong%20Dimsum%20-%20M%C3%AC%20t%C6%B0%C6%A1i%20k%C3%A9o%20s%E1%BB%A3i%20-%20Dessert",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v21.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v21.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("06:30:00"),
+                    CloseTime = TimeOnly.Parse("14:00:00"),
+                    IsClosed = false
+                });
+            }
+            v21.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v21.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Khai+Phong+Dimsum+Mi+tuoi+keo+soi+Dessert&amp;query_place_id=ChIJL5rHqnQhdTERGKtrgYDbIdE", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v21.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v21.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Kh%E1%BA%A3i%20Phong%20Dimsum%20-%20M%C3%AC%20t%C6%B0%C6%A1i%20k%C3%A9o%20s%E1%BB%A3i%20-%20Dessert", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v21.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v21.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Kh%E1%BA%A3i%20Phong%20Dimsum%20-%20M%C3%AC%20t%C6%B0%C6%A1i%20k%C3%A9o%20s%E1%BB%A3i%20-%20Dessert+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v21.Amenities.Add(new VenueAmenityLink { VenueId = v21.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v21.Amenities.Add(new VenueAmenityLink { VenueId = v21.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v21.Amenities.Add(new VenueAmenityLink { VenueId = v21.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v21.Amenities.Add(new VenueAmenityLink { VenueId = v21.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v21.Amenities.Add(new VenueAmenityLink { VenueId = v21.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v21.Amenities.Add(new VenueAmenityLink { VenueId = v21.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v21.Tags.Add(new VenueTagLink { VenueId = v21.Id, VenueTagId = tags["EAT_DRINK"] });
+            v21.Tags.Add(new VenueTagLink { VenueId = v21.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v21);
+
+            // [VEN-022] LIÊN HẢI PHÒNG
+            var v22 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444422"),
+                Name = @"LIÊN HẢI PHÒNG",
+                CategoryId = categories["EATERY"],
+                Description = @"ăn sáng; món Hải Phòng; ăn nhanh",
+                Address = @"Khu Manhattan, công viên Manhattan, 02 Đường T12, Vinhomes Grand Park, Long Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8408m,
+                Longitude = 106.8435m,
+                PriceMin = 35000m,
+                PriceMax = 60000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=LI%C3%8AN%20H%E1%BA%A2I%20PH%C3%92NG",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/LI%C3%8AN%20H%E1%BA%A2I%20PH%C3%92NG",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v22.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v22.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("06:00:00"),
+                    CloseTime = TimeOnly.Parse("20:00:00"),
+                    IsClosed = false
+                });
+            }
+            v22.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v22.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=LIEN+HAI+PHONG&amp;query_place_id=ChIJzYEEVgAhdTERjjPzg65gcYM", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v22.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v22.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=LI%C3%8AN%20H%E1%BA%A2I%20PH%C3%92NG", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v22.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v22.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=LI%C3%8AN%20H%E1%BA%A2I%20PH%C3%92NG+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v22.Amenities.Add(new VenueAmenityLink { VenueId = v22.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v22.Amenities.Add(new VenueAmenityLink { VenueId = v22.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v22.Amenities.Add(new VenueAmenityLink { VenueId = v22.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v22.Amenities.Add(new VenueAmenityLink { VenueId = v22.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v22.Amenities.Add(new VenueAmenityLink { VenueId = v22.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v22.Amenities.Add(new VenueAmenityLink { VenueId = v22.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v22.Tags.Add(new VenueTagLink { VenueId = v22.Id, VenueTagId = tags["EAT_DRINK"] });
+            v22.Tags.Add(new VenueTagLink { VenueId = v22.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v22);
+
+            // [VEN-023] Lâm Ký Mì Gia
+            var v23 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444423"),
+                Name = @"Lâm Ký Mì Gia",
+                CategoryId = categories["RESTAURANT"],
+                Description = @"mì; ăn chính; ăn nhanh",
+                Address = @"06 Manhattan, Vinhomes Grand Park, Long Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.845m,
+                Longitude = 106.82m,
+                PriceMin = 150000m,
+                PriceMax = 250000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=L%C3%A2m%20K%C3%BD%20M%C3%AC%20Gia",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/L%C3%A2m%20K%C3%BD%20M%C3%AC%20Gia",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v23.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v23.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("06:30:00"),
+                    CloseTime = TimeOnly.Parse("20:30:00"),
+                    IsClosed = false
+                });
+            }
+            v23.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v23.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Lam+Ky+Mi+Gia&amp;query_place_id=ChIJLaTkAFkhdTERcRAY0DO710o", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v23.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v23.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=L%C3%A2m%20K%C3%BD%20M%C3%AC%20Gia", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v23.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v23.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=L%C3%A2m%20K%C3%BD%20M%C3%AC%20Gia+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v23.Amenities.Add(new VenueAmenityLink { VenueId = v23.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v23.Amenities.Add(new VenueAmenityLink { VenueId = v23.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v23.Amenities.Add(new VenueAmenityLink { VenueId = v23.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v23.Amenities.Add(new VenueAmenityLink { VenueId = v23.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v23.Amenities.Add(new VenueAmenityLink { VenueId = v23.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v23.Amenities.Add(new VenueAmenityLink { VenueId = v23.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v23.Tags.Add(new VenueTagLink { VenueId = v23.Id, VenueTagId = tags["EAT_DRINK"] });
+            v23.Tags.Add(new VenueTagLink { VenueId = v23.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v23);
+
+            // [VEN-024] Link Ốc Q9
+            var v24 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444424"),
+                Name = @"Link Ốc Q9",
+                CategoryId = categories["RESTAURANT"],
+                Description = @"ốc; hải sản; ăn tối; nhóm bạn",
+                Address = @"51 Phan Chu Trinh, phường Tăng Nhơn Phú, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8375m,
+                Longitude = 106.7757m,
+                PriceMin = 100000m,
+                PriceMax = 200000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=Link%20%E1%BB%90c%20Q9",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/Link%20%E1%BB%90c%20Q9",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v24.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v24.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("16:00:00"),
+                    CloseTime = TimeOnly.Parse("23:30:00"),
+                    IsClosed = false
+                });
+            }
+            v24.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v24.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Link+Oc+Q9&amp;query_place_id=ChIJb6rzJwAndTER7YrLZAT93no", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v24.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v24.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Link%20%E1%BB%90c%20Q9", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v24.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v24.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Link%20%E1%BB%90c%20Q9+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v24.Amenities.Add(new VenueAmenityLink { VenueId = v24.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v24.Amenities.Add(new VenueAmenityLink { VenueId = v24.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v24.Amenities.Add(new VenueAmenityLink { VenueId = v24.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v24.Amenities.Add(new VenueAmenityLink { VenueId = v24.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v24.Tags.Add(new VenueTagLink { VenueId = v24.Id, VenueTagId = tags["EAT_DRINK"] });
+            v24.Tags.Add(new VenueTagLink { VenueId = v24.Id, VenueTagId = tags["SOCIAL"] });
+            venueList.Add(v24);
+
+            // [VEN-025] Cafe Khanh
+            var v25 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444425"),
+                Name = @"Cafe Khanh",
+                CategoryId = categories["CAFE"],
+                Description = @"cà phê; gặp bạn; đồ uống",
+                Address = @"147/24 Tăng Nhơn Phú, phường Tăng Nhơn Phú, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8366m,
+                Longitude = 106.7708m,
+                PriceMin = 30000m,
+                PriceMax = 65000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=Cafe%20Khanh",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/Cafe%20Khanh",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v25.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v25.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("06:30:00"),
+                    CloseTime = TimeOnly.Parse("19:30:00"),
+                    IsClosed = false
+                });
+            }
+            v25.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v25.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Cafe+Khanh&amp;query_place_id=ChIJcSKGUQAndTERTzm0pV1LuJU", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v25.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v25.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Cafe%20Khanh", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v25.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v25.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Cafe%20Khanh+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v25.Amenities.Add(new VenueAmenityLink { VenueId = v25.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v25.Amenities.Add(new VenueAmenityLink { VenueId = v25.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v25.Amenities.Add(new VenueAmenityLink { VenueId = v25.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v25.Amenities.Add(new VenueAmenityLink { VenueId = v25.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v25.Amenities.Add(new VenueAmenityLink { VenueId = v25.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v25.Amenities.Add(new VenueAmenityLink { VenueId = v25.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v25.Tags.Add(new VenueTagLink { VenueId = v25.Id, VenueTagId = tags["STUDY_WORK"] });
+            v25.Tags.Add(new VenueTagLink { VenueId = v25.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v25);
+
+            // [VEN-026] Hanmaeum BBQ
+            var v26 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444426"),
+                Name = @"Hanmaeum BBQ",
+                CategoryId = categories["RESTAURANT"],
+                Description = @"BBQ; ăn tối; nhóm bạn",
+                Address = @"311 Phước Thiện, Long Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8527m,
+                Longitude = 106.8439m,
+                PriceMin = 200000m,
+                PriceMax = 700000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=Hanmaeum%20BBQ",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/Hanmaeum%20BBQ",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v26.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v26.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("11:00:00"),
+                    CloseTime = TimeOnly.Parse("02:00:00"),
+                    IsClosed = false
+                });
+            }
+            v26.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v26.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Hanmaeum+BBQ&amp;query_place_id=ChIJ8Ylp8kchdTERVs6yusrxZRk", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v26.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v26.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Hanmaeum%20BBQ", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v26.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v26.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Hanmaeum%20BBQ+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v26.Amenities.Add(new VenueAmenityLink { VenueId = v26.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v26.Amenities.Add(new VenueAmenityLink { VenueId = v26.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v26.Amenities.Add(new VenueAmenityLink { VenueId = v26.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v26.Amenities.Add(new VenueAmenityLink { VenueId = v26.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v26.Amenities.Add(new VenueAmenityLink { VenueId = v26.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v26.Amenities.Add(new VenueAmenityLink { VenueId = v26.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v26.Tags.Add(new VenueTagLink { VenueId = v26.Id, VenueTagId = tags["EAT_DRINK"] });
+            v26.Tags.Add(new VenueTagLink { VenueId = v26.Id, VenueTagId = tags["SOCIAL"] });
+            venueList.Add(v26);
+
+            // [VEN-027] Monstera Roastery - Specialty coffee and plants
+            var v27 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444427"),
+                Name = @"Monstera Roastery - Specialty coffee and plants",
+                CategoryId = categories["CAFE"],
+                Description = @"cà phê; gặp bạn; trải nghiệm không gian",
+                Address = @"6 Chu Mạnh Trinh, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8538m,
+                Longitude = 106.766m,
+                PriceMin = 30000m,
+                PriceMax = 65000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=Monstera%20Roastery%20-%20Specialty%20coffee%20and%20plants",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/Monstera%20Roastery%20-%20Specialty%20coffee%20and%20plants",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v27.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v27.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("07:00:00"),
+                    CloseTime = TimeOnly.Parse("22:00:00"),
+                    IsClosed = false
+                });
+            }
+            v27.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v27.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Monstera+Roastery+Specialty+coffee+and+plants&amp;query_place_id=ChIJQ9pK9_AndTERxmj4yMXUj_g", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v27.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v27.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Monstera%20Roastery%20-%20Specialty%20coffee%20and%20plants", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v27.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v27.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Monstera%20Roastery%20-%20Specialty%20coffee%20and%20plants+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v27.Amenities.Add(new VenueAmenityLink { VenueId = v27.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v27.Amenities.Add(new VenueAmenityLink { VenueId = v27.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v27.Amenities.Add(new VenueAmenityLink { VenueId = v27.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v27.Amenities.Add(new VenueAmenityLink { VenueId = v27.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v27.Amenities.Add(new VenueAmenityLink { VenueId = v27.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v27.Amenities.Add(new VenueAmenityLink { VenueId = v27.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v27.Tags.Add(new VenueTagLink { VenueId = v27.Id, VenueTagId = tags["STUDY_WORK"] });
+            v27.Tags.Add(new VenueTagLink { VenueId = v27.Id, VenueTagId = tags["QUIET"] });
+            venueList.Add(v27);
+
+            // [VEN-028] Root's (Cà phê - Bánh mì - Trái cây)
+            var v28 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444428"),
+                Name = @"Root's (Cà phê - Bánh mì - Trái cây)",
+                CategoryId = categories["OTHER"],
+                Description = @"cà phê; bánh mì; bữa sáng; mang đi",
+                Address = @"276 Đường Võ Văn Ngân, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8492m,
+                Longitude = 106.7641m,
+                PriceMin = 35000m,
+                PriceMax = 60000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=Root's%20(C%C3%A0%20ph%C3%AA%20-%20B%C3%A1nh%20m%C3%AC%20-%20Tr%C3%A1i%20c%C3%A2y)",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/Root's%20(C%C3%A0%20ph%C3%AA%20-%20B%C3%A1nh%20m%C3%AC%20-%20Tr%C3%A1i%20c%C3%A2y)",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v28.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v28.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("06:30:00"),
+                    CloseTime = TimeOnly.Parse("18:30:00"),
+                    IsClosed = false
+                });
+            }
+            v28.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v28.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Root+s+Ca+phe+Banh+mi+Trai+cay&amp;query_place_id=ChIJmbWFXgAndTERtIiS66vsZTo", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v28.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v28.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Root's%20(C%C3%A0%20ph%C3%AA%20-%20B%C3%A1nh%20m%C3%AC%20-%20Tr%C3%A1i%20c%C3%A2y)", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v28.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v28.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Root's%20(C%C3%A0%20ph%C3%AA%20-%20B%C3%A1nh%20m%C3%AC%20-%20Tr%C3%A1i%20c%C3%A2y)+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v28.Amenities.Add(new VenueAmenityLink { VenueId = v28.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v28.Amenities.Add(new VenueAmenityLink { VenueId = v28.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v28.Amenities.Add(new VenueAmenityLink { VenueId = v28.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v28.Amenities.Add(new VenueAmenityLink { VenueId = v28.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v28.Tags.Add(new VenueTagLink { VenueId = v28.Id, VenueTagId = tags["EAT_DRINK"] });
+            v28.Tags.Add(new VenueTagLink { VenueId = v28.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v28);
+
+            // [VEN-029] CHANGE COFFEE & TEA HOUSE
+            var v29 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444429"),
+                Name = @"CHANGE COFFEE & TEA HOUSE",
+                CategoryId = categories["TEA_BEVERAGE"],
+                Description = @"cà phê; trà; gặp bạn",
+                Address = @"38 Đường 297, phường Phước Long, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8283m,
+                Longitude = 106.7662m,
+                PriceMin = 30000m,
+                PriceMax = 65000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=CHANGE%20COFFEE%20%26amp%3B%20TEA%20HOUSE",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/CHANGE%20COFFEE%20%26amp%3B%20TEA%20HOUSE",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v29.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v29.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("07:00:00"),
+                    CloseTime = TimeOnly.Parse("23:00:00"),
+                    IsClosed = false
+                });
+            }
+            v29.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v29.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=CHANGE+COFFEE+TEA+HOUSE&amp;query_place_id=ChIJ3VsxZwAndTERFidkFyR7QT4", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v29.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v29.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=CHANGE%20COFFEE%20%26amp%3B%20TEA%20HOUSE", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v29.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v29.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=CHANGE%20COFFEE%20%26amp%3B%20TEA%20HOUSE+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v29.Amenities.Add(new VenueAmenityLink { VenueId = v29.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v29.Amenities.Add(new VenueAmenityLink { VenueId = v29.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v29.Amenities.Add(new VenueAmenityLink { VenueId = v29.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v29.Amenities.Add(new VenueAmenityLink { VenueId = v29.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v29.Amenities.Add(new VenueAmenityLink { VenueId = v29.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v29.Tags.Add(new VenueTagLink { VenueId = v29.Id, VenueTagId = tags["HANGOUT"] });
+            v29.Tags.Add(new VenueTagLink { VenueId = v29.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v29);
+
+            // [VEN-030] ROSIE BAKERY
+            var v30 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444430"),
+                Name = @"ROSIE BAKERY",
+                CategoryId = categories["DESSERT"],
+                Description = @"bánh; tráng miệng; mua mang đi",
+                Address = @"15 Hòa Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8524m,
+                Longitude = 106.7603m,
+                PriceMin = 30000m,
+                PriceMax = 65000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=ROSIE%20BAKERY",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/ROSIE%20BAKERY",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v30.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v30.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("09:00:00"),
+                    CloseTime = TimeOnly.Parse("21:30:00"),
+                    IsClosed = false
+                });
+            }
+            v30.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v30.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=ROSIE+BAKERY&amp;query_place_id=ChIJqWLsWFgndTERt4a8GVzTPno", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v30.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v30.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=ROSIE%20BAKERY", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v30.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v30.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=ROSIE%20BAKERY+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v30.Amenities.Add(new VenueAmenityLink { VenueId = v30.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v30.Amenities.Add(new VenueAmenityLink { VenueId = v30.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v30.Amenities.Add(new VenueAmenityLink { VenueId = v30.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v30.Amenities.Add(new VenueAmenityLink { VenueId = v30.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v30.Tags.Add(new VenueTagLink { VenueId = v30.Id, VenueTagId = tags["EAT_DRINK"] });
+            v30.Tags.Add(new VenueTagLink { VenueId = v30.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v30);
+
+            // [VEN-031] KA3 Nướng
+            var v31 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444431"),
+                Name = @"KA3 Nướng",
+                CategoryId = categories["RESTAURANT"],
+                Description = @"nướng; ăn tối; nhóm bạn",
+                Address = @"12/4 Đường số 9, khu phố 3, phường Linh Xuân, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.865m,
+                Longitude = 106.7674m,
+                PriceMin = 100000m,
+                PriceMax = 200000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=KA3%20N%C6%B0%E1%BB%9Bng",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/KA3%20N%C6%B0%E1%BB%9Bng",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v31.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v31.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("16:00:00"),
+                    CloseTime = TimeOnly.Parse("00:30:00"),
+                    IsClosed = false
+                });
+            }
+            v31.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v31.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=KA3+Nuong&amp;query_place_id=ChIJQxvpPAAndTER1BjgeaYZISA", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v31.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v31.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=KA3%20N%C6%B0%E1%BB%9Bng", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v31.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v31.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=KA3%20N%C6%B0%E1%BB%9Bng+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v31.Amenities.Add(new VenueAmenityLink { VenueId = v31.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v31.Amenities.Add(new VenueAmenityLink { VenueId = v31.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v31.Amenities.Add(new VenueAmenityLink { VenueId = v31.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v31.Amenities.Add(new VenueAmenityLink { VenueId = v31.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v31.Tags.Add(new VenueTagLink { VenueId = v31.Id, VenueTagId = tags["EAT_DRINK"] });
+            v31.Tags.Add(new VenueTagLink { VenueId = v31.Id, VenueTagId = tags["SOCIAL"] });
+            venueList.Add(v31);
+
+            // [VEN-032] Cafe Thanh
+            var v32 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444432"),
+                Name = @"Cafe Thanh",
+                CategoryId = categories["CAFE"],
+                Description = @"cà phê; gặp bạn; đồ uống",
+                Address = @"15 Hòa Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8536m,
+                Longitude = 106.7615m,
+                PriceMin = 30000m,
+                PriceMax = 65000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=Cafe%20Thanh",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/Cafe%20Thanh",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v32.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v32.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("07:00:00"),
+                    CloseTime = TimeOnly.Parse("23:00:00"),
+                    IsClosed = false
+                });
+            }
+            v32.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v32.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Cafe+Thanh&amp;query_place_id=ChIJR5lYWqUndTERihhnDlUzuLk", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v32.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v32.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Cafe%20Thanh", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v32.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v32.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Cafe%20Thanh+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v32.Amenities.Add(new VenueAmenityLink { VenueId = v32.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v32.Amenities.Add(new VenueAmenityLink { VenueId = v32.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v32.Amenities.Add(new VenueAmenityLink { VenueId = v32.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v32.Amenities.Add(new VenueAmenityLink { VenueId = v32.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v32.Amenities.Add(new VenueAmenityLink { VenueId = v32.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v32.Amenities.Add(new VenueAmenityLink { VenueId = v32.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v32.Tags.Add(new VenueTagLink { VenueId = v32.Id, VenueTagId = tags["STUDY_WORK"] });
+            v32.Tags.Add(new VenueTagLink { VenueId = v32.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v32);
+
+            // [VEN-033] Lò Há Cảo Tâm Ký
+            var v33 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444433"),
+                Name = @"Lò Há Cảo Tâm Ký",
+                CategoryId = categories["RESTAURANT"],
+                Description = @"há cảo; món Hoa; ăn chính",
+                Address = @"189 Đường Hoàng Diệu 2, phường Linh Xuân, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8662m,
+                Longitude = 106.7686m,
+                PriceMin = 100000m,
+                PriceMax = 200000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=L%C3%B2%20H%C3%A1%20C%E1%BA%A3o%20T%C3%A2m%20K%C3%BD",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/L%C3%B2%20H%C3%A1%20C%E1%BA%A3o%20T%C3%A2m%20K%C3%BD",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v33.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v33.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("07:00:00"),
+                    CloseTime = TimeOnly.Parse("22:00:00"),
+                    IsClosed = false
+                });
+            }
+            v33.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v33.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Lo+Ha+Cao+Tam+Ky&amp;query_place_id=ChIJTb4xLwAndTER4jUDeI_Q4Yk", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v33.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v33.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=L%C3%B2%20H%C3%A1%20C%E1%BA%A3o%20T%C3%A2m%20K%C3%BD", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v33.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v33.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=L%C3%B2%20H%C3%A1%20C%E1%BA%A3o%20T%C3%A2m%20K%C3%BD+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v33.Amenities.Add(new VenueAmenityLink { VenueId = v33.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v33.Amenities.Add(new VenueAmenityLink { VenueId = v33.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v33.Amenities.Add(new VenueAmenityLink { VenueId = v33.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v33.Amenities.Add(new VenueAmenityLink { VenueId = v33.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v33.Tags.Add(new VenueTagLink { VenueId = v33.Id, VenueTagId = tags["EAT_DRINK"] });
+            v33.Tags.Add(new VenueTagLink { VenueId = v33.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v33);
+
+            // [VEN-034] Mala Panda Thủ Đức
+            var v34 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444434"),
+                Name = @"Mala Panda Thủ Đức",
+                CategoryId = categories["RESTAURANT"],
+                Description = @"món cay; ăn nhanh; ăn nhóm",
+                Address = @"133B Đường Hoàng Diệu 2, phường Linh Xuân, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8668m,
+                Longitude = 106.7692m,
+                PriceMin = 100000m,
+                PriceMax = 200000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=Mala%20Panda%20Th%E1%BB%A7%20%C4%90%E1%BB%A9c",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/Mala%20Panda%20Th%E1%BB%A7%20%C4%90%E1%BB%A9c",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v34.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v34.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("10:00:00"),
+                    CloseTime = TimeOnly.Parse("22:00:00"),
+                    IsClosed = false
+                });
+            }
+            v34.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v34.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Mala+Panda+Thu+Duc&amp;query_place_id=ChIJEbhVHgAndTERtb_QP7sCYng", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v34.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v34.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Mala%20Panda%20Th%E1%BB%A7%20%C4%90%E1%BB%A9c", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v34.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v34.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Mala%20Panda%20Th%E1%BB%A7%20%C4%90%E1%BB%A9c+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v34.Amenities.Add(new VenueAmenityLink { VenueId = v34.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v34.Amenities.Add(new VenueAmenityLink { VenueId = v34.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v34.Amenities.Add(new VenueAmenityLink { VenueId = v34.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v34.Amenities.Add(new VenueAmenityLink { VenueId = v34.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v34.Tags.Add(new VenueTagLink { VenueId = v34.Id, VenueTagId = tags["EAT_DRINK"] });
+            v34.Tags.Add(new VenueTagLink { VenueId = v34.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v34);
+
+            // [VEN-035] VIÊN Thủ Đức - Rice . Coffee & More
+            var v35 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444435"),
+                Name = @"VIÊN Thủ Đức - Rice . Coffee & More",
+                CategoryId = categories["EATERY"],
+                Description = @"cơm; cà phê; ăn chính; gặp bạn",
+                Address = @"68A Tô Vĩnh Diện, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8537m,
+                Longitude = 106.7593m,
+                PriceMin = 35000m,
+                PriceMax = 60000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=VI%C3%8AN%20Th%E1%BB%A7%20%C4%90%E1%BB%A9c%20-%20Rice%20.%20Coffee%20%26amp%3B%20More",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/VI%C3%8AN%20Th%E1%BB%A7%20%C4%90%E1%BB%A9c%20-%20Rice%20.%20Coffee%20%26amp%3B%20More",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v35.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v35.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("10:30:00"),
+                    CloseTime = TimeOnly.Parse("21:30:00"),
+                    IsClosed = false
+                });
+            }
+            v35.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v35.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=VIEN+Thu+Duc+Rice+Coffee+More&amp;query_place_id=ChIJw7BlFwAndTERzjIHfMiiliA", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v35.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v35.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=VI%C3%8AN%20Th%E1%BB%A7%20%C4%90%E1%BB%A9c%20-%20Rice%20.%20Coffee%20%26amp%3B%20More", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v35.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v35.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=VI%C3%8AN%20Th%E1%BB%A7%20%C4%90%E1%BB%A9c%20-%20Rice%20.%20Coffee%20%26amp%3B%20More+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v35.Amenities.Add(new VenueAmenityLink { VenueId = v35.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v35.Amenities.Add(new VenueAmenityLink { VenueId = v35.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v35.Amenities.Add(new VenueAmenityLink { VenueId = v35.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v35.Amenities.Add(new VenueAmenityLink { VenueId = v35.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v35.Tags.Add(new VenueTagLink { VenueId = v35.Id, VenueTagId = tags["EAT_DRINK"] });
+            v35.Tags.Add(new VenueTagLink { VenueId = v35.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v35);
+
+            // [VEN-036] BIUBIU Café - Study & Workspace
+            var v36 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444436"),
+                Name = @"BIUBIU Café - Study & Workspace",
+                CategoryId = categories["CAFE"],
+                Description = @"cà phê; học tập/làm việc (cần xác minh ổ cắm và chỗ ngồi)",
+                Address = @"32 Đường số 7, khu phố 14, phường Linh Xuân, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8638m,
+                Longitude = 106.7674m,
+                PriceMin = 30000m,
+                PriceMax = 65000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=BIUBIU%20Caf%C3%A9%20-%20Study%20%26amp%3B%20Workspace",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/BIUBIU%20Caf%C3%A9%20-%20Study%20%26amp%3B%20Workspace",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v36.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v36.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("08:00:00"),
+                    CloseTime = TimeOnly.Parse("23:59:00"),
+                    IsClosed = false
+                });
+            }
+            v36.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v36.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=BIUBIU+Cafe+Study+Workspace&amp;query_place_id=ChIJMbqFg5gndTERPu7ucUttntU", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v36.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v36.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=BIUBIU%20Caf%C3%A9%20-%20Study%20%26amp%3B%20Workspace", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v36.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v36.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=BIUBIU%20Caf%C3%A9%20-%20Study%20%26amp%3B%20Workspace+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v36.Amenities.Add(new VenueAmenityLink { VenueId = v36.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v36.Amenities.Add(new VenueAmenityLink { VenueId = v36.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v36.Amenities.Add(new VenueAmenityLink { VenueId = v36.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v36.Amenities.Add(new VenueAmenityLink { VenueId = v36.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v36.Amenities.Add(new VenueAmenityLink { VenueId = v36.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v36.Amenities.Add(new VenueAmenityLink { VenueId = v36.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v36.Tags.Add(new VenueTagLink { VenueId = v36.Id, VenueTagId = tags["STUDY_WORK"] });
+            v36.Tags.Add(new VenueTagLink { VenueId = v36.Id, VenueTagId = tags["QUIET"] });
+            venueList.Add(v36);
+
+            // [VEN-037] Juice 197 - Nước ép, sinh tố
+            var v37 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444437"),
+                Name = @"Juice 197 - Nước ép, sinh tố",
+                CategoryId = categories["TEA_BEVERAGE"],
+                Description = @"nước ép; sinh tố; đồ uống",
+                Address = @"197 Đường 410, phường Phước Long, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8239m,
+                Longitude = 106.7595m,
+                PriceMin = 30000m,
+                PriceMax = 65000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=Juice%20197%20-%20N%C6%B0%E1%BB%9Bc%20%C3%A9p%2C%20sinh%20t%E1%BB%91",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/Juice%20197%20-%20N%C6%B0%E1%BB%9Bc%20%C3%A9p%2C%20sinh%20t%E1%BB%91",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v37.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v37.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("07:00:00"),
+                    CloseTime = TimeOnly.Parse("21:00:00"),
+                    IsClosed = false
+                });
+            }
+            v37.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v37.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Juice+197+Nuoc+ep+sinh+to&amp;query_place_id=ChIJMf9E9ycndTERzgWhY9SnjaI", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v37.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v37.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Juice%20197%20-%20N%C6%B0%E1%BB%9Bc%20%C3%A9p%2C%20sinh%20t%E1%BB%91", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v37.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v37.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Juice%20197%20-%20N%C6%B0%E1%BB%9Bc%20%C3%A9p%2C%20sinh%20t%E1%BB%91+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v37.Amenities.Add(new VenueAmenityLink { VenueId = v37.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v37.Amenities.Add(new VenueAmenityLink { VenueId = v37.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v37.Amenities.Add(new VenueAmenityLink { VenueId = v37.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v37.Amenities.Add(new VenueAmenityLink { VenueId = v37.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v37.Amenities.Add(new VenueAmenityLink { VenueId = v37.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v37.Tags.Add(new VenueTagLink { VenueId = v37.Id, VenueTagId = tags["HANGOUT"] });
+            v37.Tags.Add(new VenueTagLink { VenueId = v37.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v37);
+
+            // [VEN-038] BBQ Tường Phú
+            var v38 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444438"),
+                Name = @"BBQ Tường Phú",
+                CategoryId = categories["RESTAURANT"],
+                Description = @"nướng; ăn nhóm; ăn tối",
+                Address = @"1-32 Đường Hồ Thiên Nga, Long Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8405m,
+                Longitude = 106.8446m,
+                PriceMin = 100000m,
+                PriceMax = 200000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.facebook.com/search/top?q=BBQ%20T%C6%B0%E1%BB%9Dng%20Ph%C3%BA",
+                MenuUrl = @"https://shopeefood.vn/tim-kiem/BBQ%20T%C6%B0%E1%BB%9Dng%20Ph%C3%BA",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v38.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v38.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("09:00:00"),
+                    CloseTime = TimeOnly.Parse("23:59:00"),
+                    IsClosed = false
+                });
+            }
+            v38.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v38.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=BBQ+Tuong+Phu&amp;query_place_id=ChIJiTK_PAAhdTERA-oC-HmokOY", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v38.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v38.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=BBQ%20T%C6%B0%E1%BB%9Dng%20Ph%C3%BA", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v38.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v38.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=BBQ%20T%C6%B0%E1%BB%9Dng%20Ph%C3%BA+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
+            v38.Amenities.Add(new VenueAmenityLink { VenueId = v38.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v38.Amenities.Add(new VenueAmenityLink { VenueId = v38.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v38.Amenities.Add(new VenueAmenityLink { VenueId = v38.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v38.Amenities.Add(new VenueAmenityLink { VenueId = v38.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v38.Amenities.Add(new VenueAmenityLink { VenueId = v38.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v38.Amenities.Add(new VenueAmenityLink { VenueId = v38.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v38.Tags.Add(new VenueTagLink { VenueId = v38.Id, VenueTagId = tags["EAT_DRINK"] });
+            v38.Tags.Add(new VenueTagLink { VenueId = v38.Id, VenueTagId = tags["SOCIAL"] });
+            venueList.Add(v38);
+
+            // [VEN-039] Highlands Coffee - Nguyễn Văn Tăng
+            var v39 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444439"),
+                Name = @"Highlands Coffee - Nguyễn Văn Tăng",
+                CategoryId = categories["CAFE"],
+                Description = @"cà phê; học bài; làm việc; gặp gỡ bạn bè; máy lạnh",
+                Address = @"327 Nguyễn Văn Tăng, Phường Long Thạnh Mỹ, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.84475m,
+                Longitude = 106.8225m,
+                PriceMin = 29000m,
+                PriceMax = 69000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://www.highlandscoffee.com.vn",
+                MenuUrl = @"https://shopeefood.vn/ho-chi-minh/highlands-coffee-nguyen-van-tang",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v39.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v39.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("08:00:00"),
+                    CloseTime = TimeOnly.Parse("22:00:00"),
+                    IsClosed = false
+                });
+            }
+            v39.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v39.Id, ImageUrl = @"https://down-vn.img.susercontent.com/vn-11134513-81ztc-mtxi1an3ztoo51", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"ShopeeFood & Foody / Bản quyền thuộc Highlands Coffee" });
+            v39.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v39.Id, ImageUrl = @"https://www.foody.vn/ho-chi-minh/highlands-coffee-nguyen-van-tang", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"ShopeeFood & Foody / Bản quyền thuộc Highlands Coffee" });
+            v39.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v39.Id, ImageUrl = @"https://shopeefood.vn/ho-chi-minh/highlands-coffee-nguyen-van-tang", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"ShopeeFood & Foody / Bản quyền thuộc Highlands Coffee" });
+            v39.Amenities.Add(new VenueAmenityLink { VenueId = v39.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v39.Amenities.Add(new VenueAmenityLink { VenueId = v39.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v39.Amenities.Add(new VenueAmenityLink { VenueId = v39.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v39.Amenities.Add(new VenueAmenityLink { VenueId = v39.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v39.Amenities.Add(new VenueAmenityLink { VenueId = v39.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
+            v39.Amenities.Add(new VenueAmenityLink { VenueId = v39.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v39.Tags.Add(new VenueTagLink { VenueId = v39.Id, VenueTagId = tags["STUDY_WORK"] });
+            v39.Tags.Add(new VenueTagLink { VenueId = v39.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v39);
+
+            // [VEN-040] Trà Sữa MayCha - Nguyễn Văn Tăng
+            var v40 = new Venue
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444440"),
+                Name = @"Trà Sữa MayCha - Nguyễn Văn Tăng",
+                CategoryId = categories["TEA_BEVERAGE"],
+                Description = @"trà sữa; trà trái cây; sinh viên; học nhóm; ăn vặt",
+                Address = @"398 Nguyễn Văn Tăng, Phường Long Thạnh Mỹ, TP. Thủ Đức, TP. Hồ Chí Minh",
+                Latitude = 10.8432m,
+                Longitude = 106.8248m,
+                PriceMin = 25000m,
+                PriceMax = 55000m,
+                PriceBasis = PriceBasis.PerPerson,
+                CurrencyCode = "VND",
+                WebsiteUrl = @"https://maycha.com.vn",
+                MenuUrl = @"https://shopeefood.vn/ho-chi-minh/tra-sua-maycha-398-nguyen-van-tang",
+                Status = VenueStatus.Published
+            };
+            foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+            {
+                v40.OpeningHours.Add(new VenueOpeningHour
+                {
+                    Id = Guid.NewGuid(),
+                    VenueId = v40.Id,
+                    DayOfWeek = day,
+                    OpenTime = TimeOnly.Parse("08:00:00"),
+                    CloseTime = TimeOnly.Parse("22:00:00"),
+                    IsClosed = false
+                });
+            }
+            v40.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v40.Id, ImageUrl = @"https://down-vn.img.susercontent.com/vn-11134513-81ztc-mtxlrgnlbo5e66", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"ShopeeFood & Foody / Bản quyền thuộc MayCha" });
+            v40.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v40.Id, ImageUrl = @"https://www.foody.vn/ho-chi-minh/tra-sua-maycha-398-nguyen-van-tang", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"ShopeeFood & Foody / Bản quyền thuộc MayCha" });
+            v40.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v40.Id, ImageUrl = @"https://shopeefood.vn/ho-chi-minh/tra-sua-maycha-398-nguyen-van-tang", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"ShopeeFood & Foody / Bản quyền thuộc MayCha" });
+            v40.Amenities.Add(new VenueAmenityLink { VenueId = v40.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
+            v40.Amenities.Add(new VenueAmenityLink { VenueId = v40.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
+            v40.Amenities.Add(new VenueAmenityLink { VenueId = v40.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
+            v40.Amenities.Add(new VenueAmenityLink { VenueId = v40.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
+            v40.Amenities.Add(new VenueAmenityLink { VenueId = v40.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
+            v40.Tags.Add(new VenueTagLink { VenueId = v40.Id, VenueTagId = tags["HANGOUT"] });
+            v40.Tags.Add(new VenueTagLink { VenueId = v40.Id, VenueTagId = tags["MODERATE"] });
+            venueList.Add(v40);
+
+            await context.Venues.AddRangeAsync(venueList);
+            await context.SaveChangesAsync();
+        }
+    }
+}

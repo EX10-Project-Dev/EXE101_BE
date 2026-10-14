@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace BLL.DTOs.Responses;
 
 public sealed class VenueSearchResponse
@@ -15,6 +18,9 @@ public sealed class VenueSearchResponse
 public sealed class VenueSearchResult
 {
     public VenueSummary Venue { get; init; } = new();
+    public double? DistanceKm { get; init; }
+    public double MatchScore { get; init; }
+    public string? RecommendationReason { get; init; }
     public IReadOnlyList<string> MatchReasons { get; init; } = [];
 }
 
@@ -33,6 +39,7 @@ public sealed class VenueSummary
     public bool IsOpenNow { get; init; }
     public double? RatingAverage { get; init; }
     public int ReviewCount { get; init; }
+    public IReadOnlyList<string> AmenityCodes { get; init; } = [];
 }
 
 public sealed class VenueLocation

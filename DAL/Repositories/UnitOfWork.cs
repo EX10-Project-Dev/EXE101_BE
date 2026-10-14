@@ -12,11 +12,14 @@ namespace DAL.Repositories
         private readonly AppDbContext _context;
         private readonly ConcurrentDictionary<string, object> _repositories = new();
         private IDbContextTransaction? _currentTransaction;
+        private IVenueRepository? _venues;
 
         public UnitOfWork(AppDbContext context)
         {
             _context = context;
         }
+
+        public IVenueRepository Venues => _venues ??= new VenueRepository(_context);
 
         public IGenericRepository<T> Repository<T>() where T : class
         {
