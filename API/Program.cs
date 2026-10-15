@@ -7,8 +7,16 @@ using DAL.Entities;
 using DAL.IRepositories;
 using DAL.Repositories;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using API.Services;
+using API.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,10 +43,54 @@ builder.Services.AddIdentityCore<AppUser>(opt =>
 {
     opt.Password.RequireNonAlphanumeric = false;
     opt.User.RequireUniqueEmail = true;
+    opt.SignIn.RequireConfirmedEmail = true;
+    opt.Lockout.MaxFailedAccessAttempts = 5;
+    opt.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
 })
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
+builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+    options.TokenLifespan = TimeSpan.FromHours(3));
+
+var jwtConfiguration = builder.Configuration.GetSection("Jwt");
+var jwtSigningKey = jwtConfiguration["SigningKey"];
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidIssuer = jwtConfiguration["Issuer"] ?? "FINDGO",
+        ValidateAudience = true,
+        ValidAudience = jwtConfiguration["Audience"] ?? "FINDGO.Client",
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = string.IsNullOrWhiteSpace(jwtSigningKey)
+            ? new SymmetricSecurityKey(RandomNumberGenerator.GetBytes(32))
+            : new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSigningKey)),
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.FromSeconds(30)
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = async context =>
+        {
+            var userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<AppUser>>();
+            var userId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+            var tokenStamp = context.Principal?.FindFirstValue("sst");
+            var user = userId is null ? null : await userManager.FindByIdAsync(userId);
+            if (user is null || !user.IsActive || tokenStamp is null ||
+                !string.Equals(tokenStamp, await userManager.GetSecurityStampAsync(user), StringComparison.Ordinal))
+            {
+                context.Fail("The access token has been revoked.");
+            }
+        }
+    };
+});
 
 // 4. Register Dependency Injection for DAL (UnitOfWork & Generic Repository)
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -52,6 +104,7 @@ builder.Services.AddAutoMapper(cfg =>
 
 // 6. Register BLL services
 builder.Services.AddHttpClient();
+builder.Services.AddScoped<IAppEmailSender, SmtpAppEmailSender>();
 builder.Services.AddScoped<IPromptAnalysisService, PromptAnalysisService>();
 builder.Services.AddScoped<IVenueSearchService, VenueSearchService>();
 
@@ -75,6 +128,14 @@ builder.Services.AddSwaggerGen(option =>
         Title = "EXE101 API",
         Version = "v1"
     });
+    option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "Dán access token nhận được khi đăng nhập."
+    });
+    option.OperationFilter<AuthorizeOperationFilter>();
 });
 
 var app = builder.Build();
@@ -107,6 +168,7 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

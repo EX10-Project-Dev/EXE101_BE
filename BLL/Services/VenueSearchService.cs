@@ -215,7 +215,7 @@ public sealed class VenueSearchService : IVenueSearchService
 
             if (hasPurposeMatch)
             {
-                reasons.Add($"Phù hợp mục đích {request.Purpose}");
+                reasons.Add($"Phù hợp mục đích {purpose}");
             }
             if (hasAtmosphereMatch)
             {

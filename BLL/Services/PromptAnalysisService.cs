@@ -70,7 +70,7 @@ public sealed class PromptAnalysisService : IPromptAnalysisService
         string apiKey,
         CancellationToken cancellationToken)
     {
-        var endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={apiKey}";
+        var endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={apiKey}";
 
         var systemPrompt = @"You are a Vietnamese NLU assistant for the Find&Go venue recommendation app.
 Analyze the user's natural language request into a strictly structured JSON object.

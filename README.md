@@ -66,6 +66,47 @@ Chạy các lệnh từ thư mục `EXE101_BE`.
 
 Migration `InitialVenueCatalog` tạo cấu trúc bảng cho địa điểm, danh mục, thẻ, tiện ích, giờ mở cửa, ngoại lệ giờ hoạt động và ảnh. Migration chỉ tạo/cập nhật **cấu trúc** database; nó không tự thêm dữ liệu địa điểm.
 
+## Tài khoản và xác thực
+
+Các endpoint tài khoản nằm dưới `/api/v1/auth`:
+
+| Method | Endpoint | Mục đích |
+| --- | --- | --- |
+| POST | `/register` | Tạo tài khoản và gửi email xác minh. |
+| POST | `/confirm-email` | Xác minh bằng `userId` và `token` nhận từ link email. |
+| POST | `/resend-confirmation` | Gửi lại hướng dẫn xác minh. |
+| POST | `/login` | Đăng nhập bằng email/mật khẩu; chỉ tài khoản đã xác minh email mới đăng nhập được. |
+| POST | `/logout` | Thu hồi token hiện tại và các token khác của tài khoản bằng cách xoay security stamp. |
+| POST | `/forgot-password` | Gửi link đặt lại mật khẩu nếu tài khoản tồn tại. |
+| POST | `/reset-password` | Đặt mật khẩu mới bằng email và token từ link. |
+| POST | `/google` | Đổi Google ID token do client nhận được thành JWT của FIND&GO. |
+
+Các token xác minh email và đặt lại mật khẩu có hiệu lực 3 giờ. Sau khi thêm hoặc cập nhật code, chạy `dotnet ef database update --project DAL/DAL.csproj --startup-project API/API.csproj` để bảo đảm database có các bảng Identity (migration hiện có đã tạo chúng).
+
+### Cấu hình local (không commit bí mật)
+
+`API/appsettings.example.json` liệt kê các khóa cấu hình cần có. Đặt giá trị thật trong .NET User Secrets hoặc biến môi trường:
+
+- `Jwt:SigningKey`: chuỗi bí mật ít nhất 32 byte; cùng một giá trị phải được dùng ở tất cả môi trường chạy API.
+- `Email:Host`, `Email:Port`, `Email:From`, `Email:Username`, `Email:Password`, `Email:EnableSsl`: SMTP của dịch vụ gửi thư. Với nhà cung cấp yêu cầu xác thực, dùng app password/API credential riêng.
+- `ClientApp:BaseUrl`: URL gốc của FE. FE cần có trang nhận `/auth/confirm-email` và `/auth/reset-password`, đọc query token rồi gọi endpoint tương ứng.
+- `Google:ClientIds`: danh sách OAuth Client ID được FE/mobile dùng để lấy Google ID token. Client gửi ID token tới `POST /api/v1/auth/google`; API xác minh chữ ký, audience và email đã xác minh trước khi cấp JWT.
+
+Ví dụ thiết lập bằng User Secrets (chạy trong thư mục `EXE101_BE`):
+
+```bash
+dotnet user-secrets set "Jwt:SigningKey" "<chuoi-bi-mat-it-nhat-32-byte>" --project API/API.csproj
+dotnet user-secrets set "Email:Host" "<smtp-host>" --project API/API.csproj
+dotnet user-secrets set "Email:Port" "587" --project API/API.csproj
+dotnet user-secrets set "Email:From" "<email-gui-di>" --project API/API.csproj
+dotnet user-secrets set "Email:Username" "<smtp-username>" --project API/API.csproj
+dotnet user-secrets set "Email:Password" "<smtp-app-password>" --project API/API.csproj
+dotnet user-secrets set "ClientApp:BaseUrl" "<url-fe-local>" --project API/API.csproj
+dotnet user-secrets set "Google:ClientIds:0" "<google-oauth-client-id>" --project API/API.csproj
+```
+
+Không commit signing key, SMTP password, Google client secret hoặc ID token. Google Login ở đây nhận ID token từ client nên BE không cần Google client secret.
+
 ## Tiến độ BE và việc tiếp theo
 
 ### Đã hoàn thành
@@ -74,23 +115,26 @@ Migration `InitialVenueCatalog` tạo cấu trúc bảng cho địa điểm, dan
 - [x] Tạo migration cho catalog địa điểm và cấu hình nạp dữ liệu seed từ `DAL/Data/venue-seed.json` trong môi trường Development.
 - [x] Tạo endpoint `POST /api/v1/search/recommendations` và kiểm tra được bằng Swagger.
 - [x] Thêm lọc kết quả theo các tiêu chí đã có dữ liệu: giờ mở cửa, danh mục, ngân sách và khoảng cách; hỗ trợ phân trang và link Google Maps.
+- [x] Tích hợp Gemini 3.8 Flash để phân tích prompt thành tiêu chí tìm kiếm; khi thiếu key hoặc Gemini lỗi, service dùng bộ phân tích quy tắc tiếng Việt dự phòng.
+- [x] Kết nối phân tích prompt với search và xác nhận trên Swagger: prompt tự nhiên được Gemini trích xuất, API trả các quán đang mở phù hợp.
 - [x] Cấu hình kết nối Azure SQL trên máy phát triển. Connection string là cấu hình riêng, không commit; mỗi thành viên cần tự cấu hình và được cấp quyền truy cập Azure SQL.
+- [x] Thêm API đăng ký, xác minh email, đăng nhập/đăng xuất, quên/đặt lại mật khẩu và xác minh Google ID token; các dịch vụ SMTP, JWT và Google cần được cấu hình riêng trước khi dùng.
 
 ### Chưa hoàn thành / đề xuất làm tiếp
 
-- [ ] Tích hợp AI để phân tích `prompt` tự nhiên thành tiêu chí tìm kiếm có cấu trúc; giữ bộ lọc phía server làm nguồn quyết định kết quả, AI không tự bịa thông tin địa điểm.
-- [ ] Bổ sung đối chiếu mục đích, không gian, tiện ích và quy mô nhóm khi dữ liệu địa điểm có các trường này.
-- [ ] Tích hợp GPS hoặc nhận vị trí bắt đầu do client gửi; hiện API chỉ tính khoảng cách khi request có `origin`, chưa tự lấy GPS.
-- [ ] Bổ sung dữ liệu ảnh, giá, đánh giá và các thông tin còn thiếu khi nhóm có nguồn dữ liệu.
-- [ ] Kiểm tra quyền truy cập Azure SQL và cấu hình riêng trên máy từng thành viên trước khi FE gọi API.
+- [ ] FE làm danh sách cuộn liên tục: gọi các đợt kết quả kế tiếp rồi nối vào danh sách, dùng `hasMore` để biết khi nào dừng; không hiển thị nút chuyển trang.
+- [ ] Tạo API chi tiết địa điểm theo `venueId` để FE mở khi người dùng chọn một quán.
+- [ ] FE lấy vị trí GPS hoặc cho người dùng nhập điểm bắt đầu rồi gửi `origin`; API hiện tính khoảng cách từ `origin` nhưng không tự lấy GPS.
+- [ ] Cấu hình SMTP, JWT signing key và Google OAuth Client ID trên môi trường dùng chung; FE cần nối các màn hình xác minh email/đặt lại mật khẩu và lấy Google ID token.
+- [ ] Các thành viên cần cấu hình Gemini API key và quyền truy cập Azure SQL riêng trên máy hoặc môi trường chạy của mình; không commit key/connection string.
 
-### Gợi ý bàn giao cho Khôi
+### Gợi ý việc tiếp theo
 
-Đọc phần tiến độ này cùng `API/Controllers/SearchController.cs`, service tìm kiếm trong `BLL/Services/`, DTO request/response và `DAL/Data/venue-seed.json`. Việc tiếp theo phù hợp là thiết kế/tạo service phân tích prompt bằng AI, rồi ánh xạ kết quả phân tích vào tiêu chí search hiện có. Trước khi sửa, kiểm tra code hiện tại và thống nhất hợp đồng request/response với FE; không commit API key hoặc connection string.
+Nhã có thể dùng endpoint search hiện tại để làm infinite scroll. BE vẫn nhận `page`/`pageSize` nội bộ và trả `hasMore`; FE gọi trang kế tiếp khi gần cuối danh sách rồi nối kết quả vào cùng một màn hình. Khôi có thể bổ sung endpoint chi tiết theo `venueId`. Đọc `API/Controllers/SearchController.cs`, DTO request/response và `BLL/Services/VenueSearchService.cs` trước khi sửa; không commit API key hoặc connection string.
 
 ## Dữ liệu 40 địa điểm
 
-Nhóm đã thu thập **40 địa điểm** cho bản MVP FIND&GO. Tệp `DAL/Data/venue-seed.json` chứa mã VEN-001 đến VEN-040 cùng tên, danh mục, địa chỉ và tọa độ lấy từ PDF/bảng tính. PDF/bảng tính gốc có thể nằm ngoài repository; cần chia sẻ riêng nếu muốn AI hoặc thành viên kiểm tra các trường khác.
+Nhóm thống nhất dùng **40 địa điểm giả lập** cho bản MVP/demo FIND&GO. Tệp `DAL/Data/venue-seed.json` chứa mã VEN-001 đến VEN-040 cùng dữ liệu mẫu theo PDF/bảng tính của nhóm. Không xem các thông tin này là dữ liệu địa điểm đã xác minh ngoài thực tế.
 
 ### Nạp dữ liệu vào SQL Server local
 
@@ -101,13 +145,13 @@ dotnet ef database update --project DAL/DAL.csproj --startup-project API/API.csp
 dotnet run --project API/API.csproj
 ```
 
-Trong môi trường Development, API sẽ tự nạp/upsert dữ liệu địa điểm khi khởi động. Có thể chạy lại an toàn: mã `SourceId` duy nhất (`VEN-001` ... `VEN-040`) được dùng để cập nhật bản ghi thay vì nhân đôi. Mỗi người có database local riêng; tệp JSON được chia sẻ qua Git. Các địa điểm được tạo ở trạng thái `Pending` vì dữ liệu nguồn ghi là sơ bộ/cần xác minh. Giá, tiện ích, ảnh và các trường chưa có căn cứ chưa được tự điền.
+Trong môi trường Development, API có thể tự nạp/upsert dữ liệu địa điểm khi `SeedData:ImportVenueCatalogOnStartup` bật. Có thể chạy lại an toàn: mã `SourceId` duy nhất (`VEN-001` ... `VEN-040`) được dùng để cập nhật bản ghi thay vì nhân đôi. Các địa điểm seed có trạng thái `Pending`; để dùng bộ dữ liệu demo khi search, đặt `Search:IncludePendingVenues` thành `true` trong cấu hình Development local. Mỗi người có thể dùng database riêng; tệp JSON được chia sẻ qua Git.
 
 ### Giờ hoạt động và tìm kiếm thử nghiệm
 
-PDF có giờ mở cửa cho 37 mã địa điểm. Đã đưa lịch dùng được của 36 quán vào seed: `VEN-001`–`VEN-004`, `VEN-006`–`VEN-018`, `VEN-020`–`VEN-038`. `VEN-005` có lịch ghi trong bảng nhưng ghi chú cùng PDF nói chưa thấy giờ rõ nên bị loại khỏi lọc giờ. Không có lịch cho `VEN-019`, `VEN-039` và `VEN-040`. `VEN-009` chưa có giờ thứ Hai; `VEN-033` chưa có giờ thứ Ba. Một số lịch có giờ đóng sau nửa đêm; ghi chú nguồn được giữ trong `VenueOpeningHour.Note`. Toàn bộ lịch vẫn là dữ liệu sơ bộ, chưa được xác minh thực tế.
+PDF có giờ mở cửa cho 37 mã địa điểm. Đã đưa lịch dùng được của 36 quán vào seed: `VEN-001`–`VEN-004`, `VEN-006`–`VEN-018`, `VEN-020`–`VEN-038`. `VEN-005` có lịch ghi trong bảng nhưng bị loại khỏi lọc giờ; không có lịch cho `VEN-019`, `VEN-039` và `VEN-040`. `VEN-009` chưa có giờ thứ Hai; `VEN-033` chưa có giờ thứ Ba. Một số lịch có giờ đóng sau nửa đêm. Đây là dữ liệu giả lập phục vụ demo/test.
 
-Trong môi trường Development, search cho phép xem địa điểm `Pending` để thử API và chỉ trả quán đang mở theo lịch đã nhập. Endpoint là `POST /api/v1/search/recommendations`; có thể gửi `{ "page": 1, "pageSize": 10 }` để lấy các kết quả đang mở. API hiện lọc theo giờ, danh mục, ngân sách và khoảng cách; prompt chưa được phân tích bằng AI, còn mục đích/không gian/tiện ích/quy mô nhóm chưa được đối chiếu do dữ liệu tương ứng chưa nạp. Kết quả có link Google Maps theo tên và địa chỉ; ảnh, giá và đánh giá chưa có trong seed.
+Trong môi trường Development, search cho phép xem địa điểm `Pending` khi `Search:IncludePendingVenues` bật; kết quả chỉ gồm quán đang mở theo lịch mẫu. Endpoint là `POST /api/v1/search/recommendations`. `page` mặc định là 1, `pageSize` mặc định là 10; FE có thể dùng `hasMore` để tải thêm và nối kết quả trong giao diện cuộn liên tục. Gemini phân tích prompt thành category, purpose, atmosphere, amenities, budget, distance và group size; hiện giờ mở, danh mục, ngân sách, khoảng cách và tiện ích được dùng để lọc, còn purpose/atmosphere dùng để xếp hạng. Prompt đã được thử trên Swagger với Gemini.
 
 ### Hướng dẫn dành cho AI hỗ trợ nhóm
 
