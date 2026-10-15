@@ -57,6 +57,38 @@ public static class VenueCatalogSeeder
 
         await db.SaveChangesAsync(cancellationToken);
 
+        var standardAmenities = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["WIFI"] = "Wi-Fi miễn phí",
+            ["POWER_OUTLET"] = "Ổ cắm điện",
+            ["AIR_CONDITIONING"] = "Máy lạnh / Điều hòa",
+            ["PARKING"] = "Chỗ để xe",
+            ["MOTORBIKE_PARKING"] = "Bãi đỗ xe máy",
+            ["CAR_PARKING"] = "Bãi đỗ xe ô tô",
+            ["GROUP_SEATING"] = "Chỗ ngồi nhóm đông (4+ người)"
+        };
+
+        var existingAmenities = await db.Amenities
+            .Where(x => standardAmenities.Keys.Contains(x.Code))
+            .ToDictionaryAsync(x => x.Code, cancellationToken);
+
+        foreach (var (code, name) in standardAmenities)
+        {
+            if (!existingAmenities.TryGetValue(code, out var amenity))
+            {
+                amenity = new Amenity { Name = name, Code = code, IsActive = true };
+                db.Amenities.Add(amenity);
+                existingAmenities.Add(code, amenity);
+            }
+            else
+            {
+                amenity.Name = name;
+                amenity.IsActive = true;
+            }
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
         var sourceIds = records.Select(x => x.SourceId).ToArray();
         var existingVenues = await db.Venues
             .Where(x => x.SourceId != null && sourceIds.Contains(x.SourceId))

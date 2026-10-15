@@ -1,4 +1,4 @@
-﻿# EXE101_BE - Backend FIND&GO
+# EXE101_BE - Backend FIND&GO
 
 Backend cho dự án **FIND&GO**, được tổ chức theo kiến trúc 3 tầng.
 
@@ -73,14 +73,20 @@ Migration `InitialVenueCatalog` tạo cấu trúc bảng cho địa điểm, dan
 - [x] Tạo cấu trúc backend 3 tầng và cấu hình `AppDbContext` với Entity Framework Core.
 - [x] Tạo migration cho catalog địa điểm và cấu hình nạp dữ liệu seed từ `DAL/Data/venue-seed.json` trong môi trường Development.
 - [x] Tạo endpoint `POST /api/v1/search/recommendations` và kiểm tra được bằng Swagger.
+- [x] Tạo endpoint `GET /api/v1/venues/{id}` lấy chi tiết quán theo GUID hoặc SourceId (kèm ảnh, lịch mở cửa các thứ trong tuần, tiện ích, vị trí, menu).
+- [x] Tạo endpoint `GET /api/v1/venues/categories` và `GET /api/v1/venues/amenities` cung cấp dữ liệu cho bộ lọc Frontend.
+- [x] Nạp danh mục và 7 tiện ích chuẩn vào database khi khởi động.
 - [x] Thêm lọc kết quả theo các tiêu chí đã có dữ liệu: giờ mở cửa, danh mục, ngân sách và khoảng cách; hỗ trợ phân trang và link Google Maps.
 - [x] Cấu hình kết nối Azure SQL trên máy phát triển. Connection string là cấu hình riêng, không commit; mỗi thành viên cần tự cấu hình và được cấp quyền truy cập Azure SQL.
 
 ### Chưa hoàn thành / đề xuất làm tiếp
 
-- [ ] Tích hợp AI để phân tích `prompt` tự nhiên thành tiêu chí tìm kiếm có cấu trúc; giữ bộ lọc phía server làm nguồn quyết định kết quả, AI không tự bịa thông tin địa điểm.
-- [ ] Bổ sung đối chiếu mục đích, không gian, tiện ích và quy mô nhóm khi dữ liệu địa điểm có các trường này.
-- [ ] Tích hợp GPS hoặc nhận vị trí bắt đầu do client gửi; hiện API chỉ tính khoảng cách khi request có `origin`, chưa tự lấy GPS.
+- [x] Tích hợp AI (Gemini 3.8 Flash) để phân tích `prompt` tự nhiên thành tiêu chí tìm kiếm có cấu trúc; hỗ trợ cơ chế xoay vòng nhiều API Key (Key Pool Rotation giống LoverApp), tự động đổi key khi hết quota/429/503 và có bộ NLP Rule-based Tiếng Việt dự phòng offline.
+- [x] Bổ sung đối chiếu mục đích, không gian, tiện ích và quy mô nhóm với bộ lọc và thuật toán tính điểm gợi ý.
+- [ ] Xây dựng hệ thống Xác thực & Tài khoản (ASP.NET Core Identity & JWT Bearer: Register, Login, Refresh Token).
+- [ ] Tính năng người dùng: Lưu địa điểm yêu thích (Favorites / Bookmarks).
+- [ ] Bổ sung bảng đánh giá thật (Reviews & Ratings) thay cho dữ liệu giả lập.
+- [ ] Tích hợp GPS hoặc nhận vị trí bắt đầu do client gửi (nhiệm vụ phía Frontend/Mobile gửi qua `origin`).
 - [ ] Bổ sung dữ liệu ảnh, giá, đánh giá và các thông tin còn thiếu khi nhóm có nguồn dữ liệu.
 - [ ] Kiểm tra quyền truy cập Azure SQL và cấu hình riêng trên máy từng thành viên trước khi FE gọi API.
 
