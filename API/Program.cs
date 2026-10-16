@@ -107,6 +107,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<IAppEmailSender, SmtpAppEmailSender>();
 builder.Services.AddScoped<IPromptAnalysisService, PromptAnalysisService>();
 builder.Services.AddScoped<IVenueSearchService, VenueSearchService>();
+builder.Services.AddScoped<IVenueService, VenueService>();
 
 // 7. Add CORS
 builder.Services.AddCors(options =>

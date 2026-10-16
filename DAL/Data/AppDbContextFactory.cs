@@ -9,12 +9,19 @@ public sealed class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
 {
     public AppDbContext CreateDbContext(string[] args)
     {
+        var basePath = Directory.GetCurrentDirectory();
+        var apiPath = Path.Combine(basePath, "API");
+        var configDir = Directory.Exists(apiPath) ? apiPath : basePath;
+
         var configuration = new ConfigurationBuilder()
+            .SetBasePath(configDir)
+            .AddJsonFile("appsettings.json", optional: true)
+            .AddJsonFile("appsettings.Development.json", optional: true)
             .AddUserSecrets<AppDbContextFactory>(optional: true)
             .AddEnvironmentVariables()
             .Build();
         var connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? "Data Source=NHT\\NHT;Initial Catalog=EXE101_DB;Persist Security Info=True;User ID=sa;Encrypt=False";
+            ?? "Server=KXT\\KXT;Database=EXE101_DB;Trusted_Connection=True;TrustServerCertificate=True;";
 
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseSqlServer(connectionString)

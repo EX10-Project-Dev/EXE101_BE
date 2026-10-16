@@ -1,4 +1,4 @@
-﻿# EXE101_BE - Backend FIND&GO
+# EXE101_BE - Backend FIND&GO
 
 Backend cho dự án **FIND&GO**, được tổ chức theo kiến trúc 3 tầng.
 
@@ -114,6 +114,9 @@ Không commit signing key, SMTP password, Google client secret hoặc ID token. 
 - [x] Tạo cấu trúc backend 3 tầng và cấu hình `AppDbContext` với Entity Framework Core.
 - [x] Tạo migration cho catalog địa điểm và cấu hình nạp dữ liệu seed từ `DAL/Data/venue-seed.json` trong môi trường Development.
 - [x] Tạo endpoint `POST /api/v1/search/recommendations` và kiểm tra được bằng Swagger.
+- [x] Tạo endpoint `GET /api/v1/venues/{id}` lấy chi tiết quán theo GUID hoặc SourceId (kèm ảnh, lịch mở cửa các thứ trong tuần, tiện ích, vị trí, menu).
+- [x] Tạo endpoint `GET /api/v1/venues/categories` và `GET /api/v1/venues/amenities` cung cấp dữ liệu cho bộ lọc Frontend.
+- [x] Nạp danh mục và 7 tiện ích chuẩn vào database khi khởi động.
 - [x] Thêm lọc kết quả theo các tiêu chí đã có dữ liệu: giờ mở cửa, danh mục, ngân sách và khoảng cách; hỗ trợ phân trang và link Google Maps.
 - [x] Tích hợp Gemini 3.8 Flash để phân tích prompt thành tiêu chí tìm kiếm; khi thiếu key hoặc Gemini lỗi, service dùng bộ phân tích quy tắc tiếng Việt dự phòng.
 - [x] Kết nối phân tích prompt với search và xác nhận trên Swagger: prompt tự nhiên được Gemini trích xuất, API trả các quán đang mở phù hợp.
@@ -123,8 +126,9 @@ Không commit signing key, SMTP password, Google client secret hoặc ID token. 
 ### Chưa hoàn thành / đề xuất làm tiếp
 
 - [ ] FE làm danh sách cuộn liên tục: gọi các đợt kết quả kế tiếp rồi nối vào danh sách, dùng `hasMore` để biết khi nào dừng; không hiển thị nút chuyển trang.
-- [ ] Tạo API chi tiết địa điểm theo `venueId` để FE mở khi người dùng chọn một quán.
 - [ ] FE lấy vị trí GPS hoặc cho người dùng nhập điểm bắt đầu rồi gửi `origin`; API hiện tính khoảng cách từ `origin` nhưng không tự lấy GPS.
+- [ ] Tính năng người dùng: Lưu địa điểm yêu thích (Favorites / Bookmarks).
+- [ ] Bổ sung bảng đánh giá thật (Reviews & Ratings) thay cho dữ liệu giả lập.
 - [ ] Cấu hình SMTP, JWT signing key và Google OAuth Client ID trên môi trường dùng chung; FE cần nối các màn hình xác minh email/đặt lại mật khẩu và lấy Google ID token.
 - [ ] Các thành viên cần cấu hình Gemini API key và quyền truy cập Azure SQL riêng trên máy hoặc môi trường chạy của mình; không commit key/connection string.
 

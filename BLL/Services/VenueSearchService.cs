@@ -118,7 +118,7 @@ public sealed class VenueSearchService : IVenueSearchService
                 continue;
 
             // 2. Category hard filter
-            if (categoryCodes.Count > 0 && !categoryCodes.Contains(venue.Category.Code))
+            if (categoryCodes.Count > 0 && !categoryCodes.Contains(venue.Category?.Code ?? string.Empty))
                 continue;
 
             // 3. Budget hard filter
@@ -189,7 +189,7 @@ public sealed class VenueSearchService : IVenueSearchService
             // Prompt keyword bonus (+0.15)
             if (!string.IsNullOrWhiteSpace(prompt))
             {
-                var combinedText = $"{venue.Name} {venue.Description} {venue.Category.Name}".ToLowerInvariant();
+                var combinedText = $"{venue.Name} {venue.Description} {venue.Category?.Name}".ToLowerInvariant();
                 if (combinedText.Contains(prompt))
                 {
                     score += 0.15;
@@ -238,22 +238,33 @@ public sealed class VenueSearchService : IVenueSearchService
             var summaryReason = string.Join(", ", reasons) + ".";
 
             // 8. Image URLs
-            var imageUrls = venue.Photos.OrderBy(p => p.SortOrder).Select(p => p.ImageUrl).ToList();
+            var imageUrls = venue.Photos
+                .Where(p => VenueMediaHelper.IsValidImageUrl(p.ImageUrl))
+                .OrderBy(p => p.SortOrder)
+                .Select(p => VenueMediaHelper.CleanImageUrl(p.ImageUrl))
+                .ToList();
+
             if (imageUrls.Count == 0)
             {
-                if (sourceData.TryGetValue("exteriorPhotoUrl", out var ext) && !string.IsNullOrWhiteSpace(ext))
-                    imageUrls.Add(ext);
-                if (sourceData.TryGetValue("interiorPhotoUrl", out var inte) && !string.IsNullOrWhiteSpace(inte))
-                    imageUrls.Add(inte);
-                if (sourceData.TryGetValue("menuPhotoUrl", out var menu) && !string.IsNullOrWhiteSpace(menu))
-                    imageUrls.Add(menu);
+                if (sourceData.TryGetValue("exteriorPhotoUrl", out var ext) && VenueMediaHelper.IsValidImageUrl(ext))
+                    imageUrls.Add(VenueMediaHelper.CleanImageUrl(ext));
+                if (sourceData.TryGetValue("interiorPhotoUrl", out var inte) && VenueMediaHelper.IsValidImageUrl(inte))
+                    imageUrls.Add(VenueMediaHelper.CleanImageUrl(inte));
+                if (sourceData.TryGetValue("menuPhotoUrl", out var menu) && VenueMediaHelper.IsValidImageUrl(menu))
+                    imageUrls.Add(VenueMediaHelper.CleanImageUrl(menu));
+            }
+
+            if (imageUrls.Count == 0)
+            {
+                var defaultImg = VenueMediaHelper.GetDefaultImageUrl(venue.Category?.Code);
+                imageUrls.Add(defaultImg);
             }
 
             var summary = new VenueSummary
             {
                 VenueId = venue.Id,
                 Name = venue.Name,
-                CategoryName = venue.Category.Name,
+                CategoryName = venue.Category?.Name ?? string.Empty,
                 ShortDescription = venue.Description,
                 ImageUrls = imageUrls,
                 Address = venue.Address,
@@ -263,7 +274,7 @@ public sealed class VenueSearchService : IVenueSearchService
                     Longitude = (double)venue.Longitude
                 },
                 DistanceKm = distanceKm.HasValue ? Math.Round(distanceKm.Value, 2) : null,
-                GoogleMapsUrl = BuildGoogleMapsUrl(venue),
+                GoogleMapsUrl = VenueMediaHelper.BuildGoogleMapsUrl(venue, sourceData),
                 PriceMin = venue.PriceMin,
                 PriceMax = venue.PriceMax,
                 PriceNote = venue.PriceNote,
@@ -466,12 +477,6 @@ public sealed class VenueSearchService : IVenueSearchService
     }
 
     private static double ToRadians(double degrees) => degrees * Math.PI / 180;
-
-    private static string BuildGoogleMapsUrl(Venue venue)
-    {
-        var query = Uri.EscapeDataString($"{venue.Name}, {venue.Address}");
-        return $"https://www.google.com/maps/search/?api=1&query={query}";
-    }
 
     private static IReadOnlyDictionary<string, string?> DeserializeSourceData(string? sourceDataJson)
     {
