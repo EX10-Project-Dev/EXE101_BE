@@ -139,6 +139,7 @@ public sealed class VenueService : IVenueService
                 Longitude = (double)venue.Longitude
             },
             GoogleMapsUrl = googleMapsUrl,
+            GooglePlaceId = venue.GooglePlaceId,
             WebsiteUrl = venue.WebsiteUrl ?? (sourceData.TryGetValue("websiteOrFanpageUrl", out var site) ? site : null),
             MenuUrl = venue.MenuUrl ?? (sourceData.TryGetValue("menuUrlSource", out var menuUrl) ? menuUrl : null),
             PhoneNumber = venue.PhoneNumber,
