@@ -24,7 +24,14 @@ public sealed class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
             ?? "Server=KXT\\KXT;Database=EXE101_DB;Trusted_Connection=True;TrustServerCertificate=True;";
 
         var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlServer(connectionString)
+            .UseSqlServer(connectionString, sqlOptions =>
+            {
+                sqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(30),
+                    errorNumbersToAdd: null);
+                sqlOptions.CommandTimeout(90);
+            })
             .Options;
 
         return new AppDbContext(options);
