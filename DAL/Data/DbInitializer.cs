@@ -103,9 +103,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v1.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v1.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Chow+Long+Tiem+Lau+Bo+Trieu+Chau&amp;query_place_id=ChIJgXrzCAAndTERWBjEsI7ibSU", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v1.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v1.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Chow%20Long%20-%20Ti%E1%BB%87m%20L%E1%BA%A9u%20B%C3%B2%20Tri%E1%BB%81u%20Ch%C3%A2u", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v1.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v1.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Chow%20Long%20-%20Ti%E1%BB%87m%20L%E1%BA%A9u%20B%C3%B2%20Tri%E1%BB%81u%20Ch%C3%A2u+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v1.Amenities.Add(new VenueAmenityLink { VenueId = v1.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v1.Amenities.Add(new VenueAmenityLink { VenueId = v1.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v1.Amenities.Add(new VenueAmenityLink { VenueId = v1.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -146,9 +143,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v2.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v2.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Com+Tam+Lang&amp;query_place_id=ChIJLazWIY4ndTERv-YjMOE81EM", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v2.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v2.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=C%C6%A1m%20T%E1%BA%A5m%20L%C3%A0ng", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v2.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v2.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=C%C6%A1m%20T%E1%BA%A5m%20L%C3%A0ng+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v2.Amenities.Add(new VenueAmenityLink { VenueId = v2.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v2.Amenities.Add(new VenueAmenityLink { VenueId = v2.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v2.Amenities.Add(new VenueAmenityLink { VenueId = v2.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -189,9 +183,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v3.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v3.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Hai+San+Ut+Linh+2&amp;query_place_id=ChIJx4Y_bBYndTER_HNMo5mN-Ro", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v3.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v3.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=H%E1%BA%A3i%20S%E1%BA%A3n%20%C3%9At%20Linh%202", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v3.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v3.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=H%E1%BA%A3i%20S%E1%BA%A3n%20%C3%9At%20Linh%202+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v3.Amenities.Add(new VenueAmenityLink { VenueId = v3.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v3.Amenities.Add(new VenueAmenityLink { VenueId = v3.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
             v3.Amenities.Add(new VenueAmenityLink { VenueId = v3.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
@@ -229,9 +220,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v4.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v4.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=The+Rice+Z&amp;query_place_id=ChIJjcgZKwAndTERqBF1LAkf-C0", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v4.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v4.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=The%20Rice%20Z", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v4.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v4.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=The%20Rice%20Z+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v4.Amenities.Add(new VenueAmenityLink { VenueId = v4.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v4.Amenities.Add(new VenueAmenityLink { VenueId = v4.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
             v4.Amenities.Add(new VenueAmenityLink { VenueId = v4.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
@@ -269,9 +257,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v5.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v5.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Kem+Deo+Trang+Tien&amp;query_place_id=ChIJBXlNTgAndTERX8uGya0BEfU", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v5.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v5.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Kem%20D%E1%BA%BBo%20Tr%C3%A0ng%20Ti%E1%BB%81n", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v5.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v5.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Kem%20D%E1%BA%BBo%20Tr%C3%A0ng%20Ti%E1%BB%81n+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v5.Amenities.Add(new VenueAmenityLink { VenueId = v5.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v5.Amenities.Add(new VenueAmenityLink { VenueId = v5.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
             v5.Amenities.Add(new VenueAmenityLink { VenueId = v5.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
@@ -309,9 +294,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v6.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v6.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=SoGood+Milktea+More&amp;query_place_id=ChIJATSyXwAndTERLSGxVLzyEsI", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v6.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v6.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=SoGood%20Milktea%20%26amp%3B%20More", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v6.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v6.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=SoGood%20Milktea%20%26amp%3B%20More+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v6.Amenities.Add(new VenueAmenityLink { VenueId = v6.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v6.Amenities.Add(new VenueAmenityLink { VenueId = v6.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
             v6.Amenities.Add(new VenueAmenityLink { VenueId = v6.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
@@ -350,9 +332,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v7.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v7.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Pho+Tinh+Tay&amp;query_place_id=ChIJ9QTKDgAhdTERpZtWrXbE2CM", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v7.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v7.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Ph%E1%BB%9F%20T%C3%ACnh%20T%C3%A2y", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v7.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v7.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Ph%E1%BB%9F%20T%C3%ACnh%20T%C3%A2y+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v7.Amenities.Add(new VenueAmenityLink { VenueId = v7.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v7.Amenities.Add(new VenueAmenityLink { VenueId = v7.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v7.Amenities.Add(new VenueAmenityLink { VenueId = v7.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -393,9 +372,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v8.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v8.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Tra+sua+TRAM+Milk+Tea+Coffee&amp;query_place_id=ChIJH0Jd_zwndTER0FWWvLZ0Lcw", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v8.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v8.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Tr%C3%A0%20s%E1%BB%AFa%20TR%E1%BA%A0M%20-%20Milk%20Tea%20%26amp%3B%20Coffee", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v8.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v8.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Tr%C3%A0%20s%E1%BB%AFa%20TR%E1%BA%A0M%20-%20Milk%20Tea%20%26amp%3B%20Coffee+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v8.Amenities.Add(new VenueAmenityLink { VenueId = v8.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v8.Amenities.Add(new VenueAmenityLink { VenueId = v8.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
             v8.Amenities.Add(new VenueAmenityLink { VenueId = v8.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
@@ -434,9 +410,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v9.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v9.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Le+Pierros+Bakery+Coffee+Shop&amp;query_place_id=ChIJhRD5EAAhdTER_yv6GCyO7kE", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v9.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v9.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Le%20Pierro%E2%80%99s%20Bakery%20%26amp%3B%20Coffee%20Shop", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v9.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v9.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Le%20Pierro%E2%80%99s%20Bakery%20%26amp%3B%20Coffee%20Shop+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v9.Amenities.Add(new VenueAmenityLink { VenueId = v9.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v9.Amenities.Add(new VenueAmenityLink { VenueId = v9.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v9.Amenities.Add(new VenueAmenityLink { VenueId = v9.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -477,9 +450,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v10.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v10.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Thuy+Van+Ky+S605+Vinhomes+Grand+Park&amp;query_place_id=ChIJo7dmFrYhdTERQrDCYdOKMkY", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v10.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v10.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Th%E1%BB%A7y%20V%C3%A2n%20K%C3%BD%20S605%20Vinhomes%20Grand%20Park", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v10.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v10.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Th%E1%BB%A7y%20V%C3%A2n%20K%C3%BD%20S605%20Vinhomes%20Grand%20Park+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v10.Amenities.Add(new VenueAmenityLink { VenueId = v10.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v10.Amenities.Add(new VenueAmenityLink { VenueId = v10.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v10.Amenities.Add(new VenueAmenityLink { VenueId = v10.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -520,9 +490,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v11.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v11.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Nha+hang+WASABI&amp;query_place_id=ChIJTUqXBwAhdTER7razRA9nIeI", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v11.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v11.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Nh%C3%A0%20h%C3%A0ng%20WASABI", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v11.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v11.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Nh%C3%A0%20h%C3%A0ng%20WASABI+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v11.Amenities.Add(new VenueAmenityLink { VenueId = v11.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v11.Amenities.Add(new VenueAmenityLink { VenueId = v11.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v11.Amenities.Add(new VenueAmenityLink { VenueId = v11.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -563,9 +530,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v12.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v12.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Thai+Market+Restaurant+Vincom+Le+Van+Viet&amp;query_place_id=ChIJrRlxEwAndTERYo5hGONpuSo", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v12.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v12.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Thai%20Market%20Restaurant%20-%20Vincom%20L%C3%AA%20V%C4%83n%20Vi%E1%BB%87t", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v12.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v12.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Thai%20Market%20Restaurant%20-%20Vincom%20L%C3%AA%20V%C4%83n%20Vi%E1%BB%87t+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v12.Amenities.Add(new VenueAmenityLink { VenueId = v12.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v12.Amenities.Add(new VenueAmenityLink { VenueId = v12.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
             v12.Amenities.Add(new VenueAmenityLink { VenueId = v12.Id, AmenityId = amenities["GROUP_SEATING"], Availability = AmenityAvailability.Available });
@@ -603,9 +567,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v13.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v13.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=TIEM+PHO+GIA+TRUYEN+1979&amp;query_place_id=ChIJdSSQHQAhdTERjO9Qxxc06ug", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v13.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v13.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=TI%E1%BB%86M%20PH%E1%BB%9E%20GIA%20TRUY%E1%BB%80N%201979", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v13.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v13.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=TI%E1%BB%86M%20PH%E1%BB%9E%20GIA%20TRUY%E1%BB%80N%201979+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v13.Amenities.Add(new VenueAmenityLink { VenueId = v13.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v13.Amenities.Add(new VenueAmenityLink { VenueId = v13.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v13.Amenities.Add(new VenueAmenityLink { VenueId = v13.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -646,9 +607,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v14.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v14.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Vintage+Taste+Deli+Cafe&amp;query_place_id=ChIJ9chA0gshdTERkKJl2cm6IDM", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v14.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v14.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Vintage%20Taste%20Deli%20Cafe", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v14.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v14.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Vintage%20Taste%20Deli%20Cafe+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v14.Amenities.Add(new VenueAmenityLink { VenueId = v14.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v14.Amenities.Add(new VenueAmenityLink { VenueId = v14.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v14.Amenities.Add(new VenueAmenityLink { VenueId = v14.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -689,9 +647,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v15.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v15.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=CHAGEE+Vinhomes+Grand+Park&amp;query_place_id=ChIJlQsXGwAhdTERg-jcX_s8g2I", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v15.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v15.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=CHAGEE%20Vinhomes%20Grand%20Park", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v15.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v15.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=CHAGEE%20Vinhomes%20Grand%20Park+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v15.Amenities.Add(new VenueAmenityLink { VenueId = v15.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v15.Amenities.Add(new VenueAmenityLink { VenueId = v15.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v15.Amenities.Add(new VenueAmenityLink { VenueId = v15.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -732,9 +687,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v16.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v16.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Quan+an+Me+Mon&amp;query_place_id=ChIJL5QeRQAhdTERdi_5fYjMWIY", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v16.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v16.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Qu%C3%A1n%20%C4%83n%20M%C3%AA%20M%C3%B3n", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v16.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v16.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Qu%C3%A1n%20%C4%83n%20M%C3%AA%20M%C3%B3n+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v16.Amenities.Add(new VenueAmenityLink { VenueId = v16.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v16.Amenities.Add(new VenueAmenityLink { VenueId = v16.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v16.Amenities.Add(new VenueAmenityLink { VenueId = v16.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -775,9 +727,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v17.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v17.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=DaHu+hotpot+Vincom+Mega+Mall&amp;query_place_id=ChIJP2xXagAhdTERqmW6FFnTmjQ", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v17.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v17.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=DaH%C3%BA%20hotpot%20Vincom%20Mega%20Mall", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v17.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v17.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=DaH%C3%BA%20hotpot%20Vincom%20Mega%20Mall+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v17.Amenities.Add(new VenueAmenityLink { VenueId = v17.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v17.Amenities.Add(new VenueAmenityLink { VenueId = v17.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v17.Amenities.Add(new VenueAmenityLink { VenueId = v17.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -818,9 +767,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v18.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v18.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Vi+Nha+Tinh+hoa+am+thuc+3+mien&amp;query_place_id=ChIJ4_nXBAAhdTER75auB9lf0-o", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v18.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v18.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=V%E1%BB%8B%20Nh%C3%A0%20-%20Tinh%20hoa%20%E1%BA%A9m%20th%E1%BB%B1c%203%20mi%E1%BB%81n", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v18.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v18.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=V%E1%BB%8B%20Nh%C3%A0%20-%20Tinh%20hoa%20%E1%BA%A9m%20th%E1%BB%B1c%203%20mi%E1%BB%81n+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v18.Amenities.Add(new VenueAmenityLink { VenueId = v18.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v18.Amenities.Add(new VenueAmenityLink { VenueId = v18.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v18.Amenities.Add(new VenueAmenityLink { VenueId = v18.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -861,9 +807,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v19.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v19.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Com+Nieu+Ba+Chang&amp;query_place_id=ChIJpUYFFwAhdTERbRWQrD4olNI", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v19.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v19.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=C%C6%A1m%20Ni%C3%AAu%20B%C3%A0%20Chang", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v19.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v19.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=C%C6%A1m%20Ni%C3%AAu%20B%C3%A0%20Chang+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v19.Amenities.Add(new VenueAmenityLink { VenueId = v19.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v19.Amenities.Add(new VenueAmenityLink { VenueId = v19.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v19.Amenities.Add(new VenueAmenityLink { VenueId = v19.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -904,9 +847,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v20.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v20.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=New+Zealand+Ice+Cream+Megamall+Grand+Park&amp;query_place_id=ChIJm4o0bHIhdTERLsqOi2oyOo8", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v20.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v20.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=New%20Zealand%20Ice%20Cream%20-%20Megamall%20Grand%20Park", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v20.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v20.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=New%20Zealand%20Ice%20Cream%20-%20Megamall%20Grand%20Park+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v20.Amenities.Add(new VenueAmenityLink { VenueId = v20.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v20.Amenities.Add(new VenueAmenityLink { VenueId = v20.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v20.Amenities.Add(new VenueAmenityLink { VenueId = v20.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -947,9 +887,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v21.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v21.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Khai+Phong+Dimsum+Mi+tuoi+keo+soi+Dessert&amp;query_place_id=ChIJL5rHqnQhdTERGKtrgYDbIdE", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v21.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v21.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Kh%E1%BA%A3i%20Phong%20Dimsum%20-%20M%C3%AC%20t%C6%B0%C6%A1i%20k%C3%A9o%20s%E1%BB%A3i%20-%20Dessert", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v21.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v21.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Kh%E1%BA%A3i%20Phong%20Dimsum%20-%20M%C3%AC%20t%C6%B0%C6%A1i%20k%C3%A9o%20s%E1%BB%A3i%20-%20Dessert+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v21.Amenities.Add(new VenueAmenityLink { VenueId = v21.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v21.Amenities.Add(new VenueAmenityLink { VenueId = v21.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v21.Amenities.Add(new VenueAmenityLink { VenueId = v21.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -990,9 +927,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v22.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v22.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=LIEN+HAI+PHONG&amp;query_place_id=ChIJzYEEVgAhdTERjjPzg65gcYM", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v22.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v22.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=LI%C3%8AN%20H%E1%BA%A2I%20PH%C3%92NG", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v22.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v22.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=LI%C3%8AN%20H%E1%BA%A2I%20PH%C3%92NG+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v22.Amenities.Add(new VenueAmenityLink { VenueId = v22.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v22.Amenities.Add(new VenueAmenityLink { VenueId = v22.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v22.Amenities.Add(new VenueAmenityLink { VenueId = v22.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -1033,9 +967,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v23.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v23.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Lam+Ky+Mi+Gia&amp;query_place_id=ChIJLaTkAFkhdTERcRAY0DO710o", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v23.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v23.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=L%C3%A2m%20K%C3%BD%20M%C3%AC%20Gia", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v23.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v23.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=L%C3%A2m%20K%C3%BD%20M%C3%AC%20Gia+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v23.Amenities.Add(new VenueAmenityLink { VenueId = v23.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v23.Amenities.Add(new VenueAmenityLink { VenueId = v23.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v23.Amenities.Add(new VenueAmenityLink { VenueId = v23.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -1076,9 +1007,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v24.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v24.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Link+Oc+Q9&amp;query_place_id=ChIJb6rzJwAndTER7YrLZAT93no", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v24.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v24.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Link%20%E1%BB%90c%20Q9", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v24.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v24.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Link%20%E1%BB%90c%20Q9+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v24.Amenities.Add(new VenueAmenityLink { VenueId = v24.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v24.Amenities.Add(new VenueAmenityLink { VenueId = v24.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
             v24.Amenities.Add(new VenueAmenityLink { VenueId = v24.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
@@ -1117,9 +1045,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v25.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v25.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Cafe+Khanh&amp;query_place_id=ChIJcSKGUQAndTERTzm0pV1LuJU", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v25.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v25.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Cafe%20Khanh", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v25.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v25.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Cafe%20Khanh+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v25.Amenities.Add(new VenueAmenityLink { VenueId = v25.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v25.Amenities.Add(new VenueAmenityLink { VenueId = v25.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v25.Amenities.Add(new VenueAmenityLink { VenueId = v25.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -1160,9 +1085,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v26.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v26.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Hanmaeum+BBQ&amp;query_place_id=ChIJ8Ylp8kchdTERVs6yusrxZRk", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v26.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v26.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Hanmaeum%20BBQ", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v26.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v26.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Hanmaeum%20BBQ+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v26.Amenities.Add(new VenueAmenityLink { VenueId = v26.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v26.Amenities.Add(new VenueAmenityLink { VenueId = v26.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v26.Amenities.Add(new VenueAmenityLink { VenueId = v26.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -1203,9 +1125,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v27.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v27.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Monstera+Roastery+Specialty+coffee+and+plants&amp;query_place_id=ChIJQ9pK9_AndTERxmj4yMXUj_g", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v27.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v27.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Monstera%20Roastery%20-%20Specialty%20coffee%20and%20plants", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v27.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v27.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Monstera%20Roastery%20-%20Specialty%20coffee%20and%20plants+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v27.Amenities.Add(new VenueAmenityLink { VenueId = v27.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v27.Amenities.Add(new VenueAmenityLink { VenueId = v27.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v27.Amenities.Add(new VenueAmenityLink { VenueId = v27.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -1246,9 +1165,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v28.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v28.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Root+s+Ca+phe+Banh+mi+Trai+cay&amp;query_place_id=ChIJmbWFXgAndTERtIiS66vsZTo", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v28.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v28.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Root's%20(C%C3%A0%20ph%C3%AA%20-%20B%C3%A1nh%20m%C3%AC%20-%20Tr%C3%A1i%20c%C3%A2y)", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v28.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v28.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Root's%20(C%C3%A0%20ph%C3%AA%20-%20B%C3%A1nh%20m%C3%AC%20-%20Tr%C3%A1i%20c%C3%A2y)+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v28.Amenities.Add(new VenueAmenityLink { VenueId = v28.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v28.Amenities.Add(new VenueAmenityLink { VenueId = v28.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
             v28.Amenities.Add(new VenueAmenityLink { VenueId = v28.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
@@ -1287,9 +1203,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v29.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v29.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=CHANGE+COFFEE+TEA+HOUSE&amp;query_place_id=ChIJ3VsxZwAndTERFidkFyR7QT4", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v29.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v29.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=CHANGE%20COFFEE%20%26amp%3B%20TEA%20HOUSE", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v29.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v29.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=CHANGE%20COFFEE%20%26amp%3B%20TEA%20HOUSE+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v29.Amenities.Add(new VenueAmenityLink { VenueId = v29.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v29.Amenities.Add(new VenueAmenityLink { VenueId = v29.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
             v29.Amenities.Add(new VenueAmenityLink { VenueId = v29.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
@@ -1329,9 +1242,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v30.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v30.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=ROSIE+BAKERY&amp;query_place_id=ChIJqWLsWFgndTERt4a8GVzTPno", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v30.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v30.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=ROSIE%20BAKERY", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v30.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v30.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=ROSIE%20BAKERY+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v30.Amenities.Add(new VenueAmenityLink { VenueId = v30.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v30.Amenities.Add(new VenueAmenityLink { VenueId = v30.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
             v30.Amenities.Add(new VenueAmenityLink { VenueId = v30.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
@@ -1370,9 +1280,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v31.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v31.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=KA3+Nuong&amp;query_place_id=ChIJQxvpPAAndTER1BjgeaYZISA", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v31.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v31.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=KA3%20N%C6%B0%E1%BB%9Bng", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v31.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v31.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=KA3%20N%C6%B0%E1%BB%9Bng+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v31.Amenities.Add(new VenueAmenityLink { VenueId = v31.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v31.Amenities.Add(new VenueAmenityLink { VenueId = v31.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
             v31.Amenities.Add(new VenueAmenityLink { VenueId = v31.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
@@ -1411,9 +1318,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v32.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v32.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Cafe+Thanh&amp;query_place_id=ChIJR5lYWqUndTERihhnDlUzuLk", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v32.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v32.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Cafe%20Thanh", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v32.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v32.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Cafe%20Thanh+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v32.Amenities.Add(new VenueAmenityLink { VenueId = v32.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v32.Amenities.Add(new VenueAmenityLink { VenueId = v32.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v32.Amenities.Add(new VenueAmenityLink { VenueId = v32.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -1454,9 +1358,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v33.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v33.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Lo+Ha+Cao+Tam+Ky&amp;query_place_id=ChIJTb4xLwAndTER4jUDeI_Q4Yk", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v33.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v33.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=L%C3%B2%20H%C3%A1%20C%E1%BA%A3o%20T%C3%A2m%20K%C3%BD", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v33.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v33.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=L%C3%B2%20H%C3%A1%20C%E1%BA%A3o%20T%C3%A2m%20K%C3%BD+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v33.Amenities.Add(new VenueAmenityLink { VenueId = v33.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v33.Amenities.Add(new VenueAmenityLink { VenueId = v33.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
             v33.Amenities.Add(new VenueAmenityLink { VenueId = v33.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
@@ -1495,9 +1396,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v34.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v34.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Mala+Panda+Thu+Duc&amp;query_place_id=ChIJEbhVHgAndTERtb_QP7sCYng", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v34.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v34.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Mala%20Panda%20Th%E1%BB%A7%20%C4%90%E1%BB%A9c", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v34.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v34.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Mala%20Panda%20Th%E1%BB%A7%20%C4%90%E1%BB%A9c+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v34.Amenities.Add(new VenueAmenityLink { VenueId = v34.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v34.Amenities.Add(new VenueAmenityLink { VenueId = v34.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
             v34.Amenities.Add(new VenueAmenityLink { VenueId = v34.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
@@ -1536,9 +1434,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v35.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v35.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=VIEN+Thu+Duc+Rice+Coffee+More&amp;query_place_id=ChIJw7BlFwAndTERzjIHfMiiliA", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v35.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v35.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=VI%C3%8AN%20Th%E1%BB%A7%20%C4%90%E1%BB%A9c%20-%20Rice%20.%20Coffee%20%26amp%3B%20More", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v35.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v35.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=VI%C3%8AN%20Th%E1%BB%A7%20%C4%90%E1%BB%A9c%20-%20Rice%20.%20Coffee%20%26amp%3B%20More+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v35.Amenities.Add(new VenueAmenityLink { VenueId = v35.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v35.Amenities.Add(new VenueAmenityLink { VenueId = v35.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
             v35.Amenities.Add(new VenueAmenityLink { VenueId = v35.Id, AmenityId = amenities["CAR_PARKING"], Availability = AmenityAvailability.Available });
@@ -1577,9 +1472,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v36.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v36.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=BIUBIU+Cafe+Study+Workspace&amp;query_place_id=ChIJMbqFg5gndTERPu7ucUttntU", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v36.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v36.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=BIUBIU%20Caf%C3%A9%20-%20Study%20%26amp%3B%20Workspace", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v36.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v36.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=BIUBIU%20Caf%C3%A9%20-%20Study%20%26amp%3B%20Workspace+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v36.Amenities.Add(new VenueAmenityLink { VenueId = v36.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v36.Amenities.Add(new VenueAmenityLink { VenueId = v36.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v36.Amenities.Add(new VenueAmenityLink { VenueId = v36.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
@@ -1620,9 +1512,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v37.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v37.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=Juice+197+Nuoc+ep+sinh+to&amp;query_place_id=ChIJMf9E9ycndTERzgWhY9SnjaI", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v37.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v37.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Juice%20197%20-%20N%C6%B0%E1%BB%9Bc%20%C3%A9p%2C%20sinh%20t%E1%BB%91", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v37.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v37.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=Juice%20197%20-%20N%C6%B0%E1%BB%9Bc%20%C3%A9p%2C%20sinh%20t%E1%BB%91+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v37.Amenities.Add(new VenueAmenityLink { VenueId = v37.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v37.Amenities.Add(new VenueAmenityLink { VenueId = v37.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });
             v37.Amenities.Add(new VenueAmenityLink { VenueId = v37.Id, AmenityId = amenities["MOTORBIKE_PARKING"], Availability = AmenityAvailability.Available });
@@ -1662,9 +1551,6 @@ public static class DbInitializer
                     IsClosed = false
                 });
             }
-            v38.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v38.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&amp;query=BBQ+Tuong+Phu&amp;query_place_id=ChIJiTK_PAAhdTERA-oC-HmokOY", PhotoType = VenuePhotoType.Exterior, SortOrder = 1, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v38.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v38.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=BBQ%20T%C6%B0%E1%BB%9Dng%20Ph%C3%BA", PhotoType = VenuePhotoType.Interior, SortOrder = 2, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
-            v38.Photos.Add(new VenuePhoto { Id = Guid.NewGuid(), VenueId = v38.Id, ImageUrl = @"https://www.google.com/maps/search/?api=1&query=BBQ%20T%C6%B0%E1%BB%9Dng%20Ph%C3%BA+menu", PhotoType = VenuePhotoType.Menu, SortOrder = 3, Source = @"Google Maps Contributors / Bản quyền thuộc quán & người chụp" });
             v38.Amenities.Add(new VenueAmenityLink { VenueId = v38.Id, AmenityId = amenities["WIFI"], Availability = AmenityAvailability.Available });
             v38.Amenities.Add(new VenueAmenityLink { VenueId = v38.Id, AmenityId = amenities["POWER_OUTLET"], Availability = AmenityAvailability.Available });
             v38.Amenities.Add(new VenueAmenityLink { VenueId = v38.Id, AmenityId = amenities["AIR_CONDITIONING"], Availability = AmenityAvailability.Available });

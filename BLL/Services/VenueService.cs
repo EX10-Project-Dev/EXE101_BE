@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Globalization;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BLL.DTOs.Responses;
@@ -63,13 +65,14 @@ public sealed class VenueService : IVenueService
         var now = GetVietnamLocalTime();
         var isOpenNow = IsOpenAt(venue, now);
 
-        // 1. Photo Mapping with SourceData fallback
+        // 1. Photo Mapping with valid image filtering and Category fallback
         var photos = venue.Photos
+            .Where(p => VenueMediaHelper.IsValidImageUrl(p.ImageUrl))
             .OrderBy(p => p.SortOrder)
             .Select(p => new VenuePhotoDto
             {
                 Id = p.Id,
-                ImageUrl = p.ImageUrl,
+                ImageUrl = VenueMediaHelper.CleanImageUrl(p.ImageUrl),
                 PhotoType = p.PhotoType.ToString(),
                 Caption = p.Caption,
                 SortOrder = p.SortOrder
@@ -79,18 +82,24 @@ public sealed class VenueService : IVenueService
         if (photos.Count == 0)
         {
             int order = 1;
-            if (sourceData.TryGetValue("exteriorPhotoUrl", out var ext) && !string.IsNullOrWhiteSpace(ext))
+            if (sourceData.TryGetValue("exteriorPhotoUrl", out var ext) && VenueMediaHelper.IsValidImageUrl(ext))
             {
-                photos.Add(new VenuePhotoDto { Id = Guid.NewGuid(), ImageUrl = ext, PhotoType = "Exterior", Caption = "Ảnh mặt tiền", SortOrder = order++ });
+                photos.Add(new VenuePhotoDto { Id = Guid.NewGuid(), ImageUrl = VenueMediaHelper.CleanImageUrl(ext), PhotoType = "Exterior", Caption = "Ảnh mặt tiền", SortOrder = order++ });
             }
-            if (sourceData.TryGetValue("interiorPhotoUrl", out var inte) && !string.IsNullOrWhiteSpace(inte))
+            if (sourceData.TryGetValue("interiorPhotoUrl", out var inte) && VenueMediaHelper.IsValidImageUrl(inte))
             {
-                photos.Add(new VenuePhotoDto { Id = Guid.NewGuid(), ImageUrl = inte, PhotoType = "Interior", Caption = "Ảnh không gian", SortOrder = order++ });
+                photos.Add(new VenuePhotoDto { Id = Guid.NewGuid(), ImageUrl = VenueMediaHelper.CleanImageUrl(inte), PhotoType = "Interior", Caption = "Ảnh không gian", SortOrder = order++ });
             }
-            if (sourceData.TryGetValue("menuPhotoUrl", out var menu) && !string.IsNullOrWhiteSpace(menu))
+            if (sourceData.TryGetValue("menuPhotoUrl", out var menu) && VenueMediaHelper.IsValidImageUrl(menu))
             {
-                photos.Add(new VenuePhotoDto { Id = Guid.NewGuid(), ImageUrl = menu, PhotoType = "Menu", Caption = "Ảnh thực đơn / menu", SortOrder = order++ });
+                photos.Add(new VenuePhotoDto { Id = Guid.NewGuid(), ImageUrl = VenueMediaHelper.CleanImageUrl(menu), PhotoType = "Menu", Caption = "Ảnh thực đơn / menu", SortOrder = order++ });
             }
+        }
+
+        if (photos.Count == 0)
+        {
+            var defaultImg = VenueMediaHelper.GetDefaultImageUrl(venue.Category?.Code);
+            photos.Add(new VenuePhotoDto { Id = Guid.NewGuid(), ImageUrl = defaultImg, PhotoType = "Cover", Caption = "Ảnh địa điểm", SortOrder = 1 });
         }
 
         // 2. Opening Hours Mapping
@@ -112,16 +121,8 @@ public sealed class VenueService : IVenueService
         // 4. Extract Tags
         var (purposes, atmospheres) = ExtractTags(venue, sourceData);
 
-        // 5. Google Maps URL
-        string googleMapsUrl;
-        if (sourceData.TryGetValue("googleMapsUrlSource", out var mapsUrl) && !string.IsNullOrWhiteSpace(mapsUrl))
-        {
-            googleMapsUrl = mapsUrl;
-        }
-        else
-        {
-            googleMapsUrl = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString($"{venue.Name}, {venue.Address}")}";
-        }
+        // 5. Clean, valid Google Maps URL
+        string googleMapsUrl = VenueMediaHelper.BuildGoogleMapsUrl(venue, sourceData);
 
         return new VenueDetailResponse
         {
