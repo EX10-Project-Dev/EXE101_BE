@@ -110,6 +110,17 @@ public static class VenueCatalogSeeder
                 isNew = true;
             }
 
+            string? placeId = record.GooglePlaceId;
+            if (string.IsNullOrWhiteSpace(placeId) && record.SourceData.TryGetValue("googleMapsUrlSource", out var mapUrl) && !string.IsNullOrWhiteSpace(mapUrl))
+            {
+                var clean = mapUrl.Replace(" ", "");
+                var match = System.Text.RegularExpressions.Regex.Match(clean, @"query_place_id=([a-zA-Z0-9_\-]+)");
+                if (match.Success)
+                {
+                    placeId = match.Groups[1].Value;
+                }
+            }
+
             var changed = isNew
                 || venue.Name != record.Name
                 || venue.Address != record.Address
@@ -119,6 +130,7 @@ public static class VenueCatalogSeeder
                 || venue.PriceMin != record.PriceMin
                 || venue.PriceMax != record.PriceMax
                 || venue.PriceNote != record.PriceNote
+                || venue.GooglePlaceId != placeId
                 || venue.SourceDataJson != JsonSerializer.Serialize(record.SourceData, JsonOptions)
                 || venue.PriceBasis != (record.PriceMin.HasValue || record.PriceMax.HasValue ? PriceBasis.PerPerson : null)
                 || venue.CurrencyCode != "VND";
@@ -131,6 +143,7 @@ public static class VenueCatalogSeeder
             venue.PriceMin = record.PriceMin;
             venue.PriceMax = record.PriceMax;
             venue.PriceNote = record.PriceNote;
+            venue.GooglePlaceId = placeId;
             venue.SourceDataJson = JsonSerializer.Serialize(record.SourceData, JsonOptions);
             venue.PriceBasis = record.PriceMin.HasValue || record.PriceMax.HasValue ? PriceBasis.PerPerson : null;
             venue.CurrencyCode = "VND";
@@ -214,6 +227,7 @@ public static class VenueCatalogSeeder
         public decimal? PriceMin { get; init; }
         public decimal? PriceMax { get; init; }
         public string? PriceNote { get; init; }
+        public string? GooglePlaceId { get; init; }
         public Dictionary<string, string?> SourceData { get; init; } = new(StringComparer.OrdinalIgnoreCase);
         public List<OpeningHourSeedRecord> OpeningHours { get; init; } = [];
     }

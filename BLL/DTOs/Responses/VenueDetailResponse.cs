@@ -14,6 +14,7 @@ public sealed class VenueDetailResponse
     public string Address { get; init; } = string.Empty;
     public VenueLocation Location { get; init; } = new();
     public string? GoogleMapsUrl { get; init; }
+    public string? GooglePlaceId { get; init; }
     public string? WebsiteUrl { get; init; }
     public string? MenuUrl { get; init; }
     public string? PhoneNumber { get; init; }
