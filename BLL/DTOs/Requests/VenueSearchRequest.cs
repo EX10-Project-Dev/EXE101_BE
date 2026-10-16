@@ -27,11 +27,13 @@ public sealed class VenueSearchRequest : IValidatableObject
     public IReadOnlyList<string> AmenityCodes { get; init; } = [];
     public SearchOrigin? Origin { get; init; }
 
+    public bool OpenNowOnly { get; init; } = false;
+
     [Range(1, int.MaxValue)]
     public int Page { get; init; } = 1;
 
-    [Range(1, 50)]
-    public int PageSize { get; init; } = 10;
+    [Range(1, 1000)]
+    public int PageSize { get; init; } = 100;
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {

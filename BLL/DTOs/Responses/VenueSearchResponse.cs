@@ -36,6 +36,7 @@ public sealed class VenueSummary
     public VenueLocation Location { get; init; } = new();
     public double? DistanceKm { get; init; }
     public string? GoogleMapsUrl { get; init; }
+    public string? GooglePlaceId { get; init; }
     public decimal? PriceMin { get; init; }
     public decimal? PriceMax { get; init; }
     public string? PriceNote { get; init; }

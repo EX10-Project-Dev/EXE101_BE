@@ -114,7 +114,8 @@ public sealed class VenueSearchService : IVenueSearchService
         foreach (var venue in venues)
         {
             // 1. Check open now (per Thai's schedule & exception logic)
-            if (!IsOpenAt(venue, now))
+            var isOpen = IsOpenAt(venue, now);
+            if (request.OpenNowOnly && !isOpen)
                 continue;
 
             // 2. Category hard filter
@@ -232,7 +233,7 @@ public sealed class VenueSearchService : IVenueSearchService
 
             if (reasons.Count == 0)
             {
-                reasons.Add("Đang mở theo lịch hoạt động hiện tại.");
+                reasons.Add(isOpen ? "Đang mở theo lịch hoạt động hiện tại." : "Địa điểm phù hợp với tìm kiếm của bạn.");
             }
 
             var summaryReason = string.Join(", ", reasons) + ".";
@@ -275,12 +276,13 @@ public sealed class VenueSearchService : IVenueSearchService
                 },
                 DistanceKm = distanceKm.HasValue ? Math.Round(distanceKm.Value, 2) : null,
                 GoogleMapsUrl = VenueMediaHelper.BuildGoogleMapsUrl(venue, sourceData),
+                GooglePlaceId = venue.GooglePlaceId,
                 PriceMin = venue.PriceMin,
                 PriceMax = venue.PriceMax,
                 PriceNote = venue.PriceNote,
                 SourceData = sourceData,
                 CurrencyCode = venue.CurrencyCode,
-                IsOpenNow = true,
+                IsOpenNow = isOpen,
                 RatingAverage = 4.6,
                 ReviewCount = 20,
                 AmenityCodes = venueAmenities.ToList()
