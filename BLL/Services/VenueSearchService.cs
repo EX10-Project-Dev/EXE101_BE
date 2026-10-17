@@ -27,7 +27,7 @@ public sealed class VenueSearchService : IVenueSearchService
         IPromptAnalysisService promptAnalysisService)
     {
         _db = db;
-        _includePendingVenues = configuration.GetValue<bool>("Search:IncludePendingVenues");
+        _includePendingVenues = configuration.GetValue("Search:IncludePendingVenues", true);
         _promptAnalysisService = promptAnalysisService;
     }
 
