@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -121,8 +121,8 @@ public static class DbInitializer
                 CategoryId = categories["EATERY"],
                 Description = @"ăn trưa; ăn tối; cơm phần",
                 Address = @"163 Nguyễn Văn Tăng, Phường Long Thạnh Mỹ, TP. Thủ Đức, TP. Hồ Chí Minh",
-                Latitude = 10.843821m,
-                Longitude = 106.81859m,
+                Latitude = 10.843847m,
+                Longitude = 106.818607m,
                 PriceMin = 35000m,
                 PriceMax = 60000m,
                 PriceBasis = PriceBasis.PerPerson,
