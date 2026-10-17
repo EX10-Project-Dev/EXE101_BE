@@ -24,7 +24,7 @@ public sealed class VenueService : IVenueService
     public VenueService(AppDbContext db, IConfiguration configuration)
     {
         _db = db;
-        _includePendingVenues = configuration.GetValue<bool>("Search:IncludePendingVenues");
+        _includePendingVenues = configuration.GetValue("Search:IncludePendingVenues", true);
     }
 
     public async Task<VenueDetailResponse?> GetVenueByIdAsync(string identifier, CancellationToken cancellationToken = default)

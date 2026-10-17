@@ -108,7 +108,7 @@ public static class VenueCatalogSeeder
             var isNew = false;
             if (!existingVenues.TryGetValue(record.SourceId, out var venue))
             {
-                venue = new Venue { SourceId = record.SourceId, Status = VenueStatus.Pending };
+                venue = new Venue { SourceId = record.SourceId, Status = VenueStatus.Published };
                 db.Venues.Add(venue);
                 existingVenues.Add(record.SourceId, venue);
                 isNew = true;
