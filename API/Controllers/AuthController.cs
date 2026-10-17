@@ -26,7 +26,7 @@ public sealed class AuthController(
     {
         if (!emailSender.IsConfigured || string.IsNullOrWhiteSpace(configuration["ClientApp:BaseUrl"]))
             return StatusCode(StatusCodes.Status503ServiceUnavailable,
-                new { message = "Email chưa được cấu hình. Hãy cấu hình SMTP và ClientApp:BaseUrl trước khi đăng ký." });
+                new { message = "Email chưa được cấu hình. Hãy cấu hình Email:ApiKey, Email:SecretKey, Email:From và ClientApp:BaseUrl trước khi đăng ký." });
 
         var email = request.Email.Trim();
         if (await userManager.FindByEmailAsync(email) is not null)

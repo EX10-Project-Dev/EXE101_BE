@@ -23,3 +23,4 @@ publish*.zip
 appsettings.*.local.json
 appsettings.Development.json
 API/appsettings.Development.json
+API/appsettings.json
