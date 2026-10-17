@@ -59,6 +59,41 @@ public sealed class AuthController(
             new { message = "Tạo tài khoản thành công. Hãy kiểm tra email để xác minh trước khi đăng nhập." });
     }
 
+    [HttpGet("confirm-email")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ConfirmEmailLink([FromQuery] string? userId, [FromQuery] string? token)
+    {
+        Response.Headers.CacheControl = "no-store";
+        Response.Headers["Referrer-Policy"] = "no-referrer";
+        Response.Headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'";
+
+        var success = false;
+        if (!string.IsNullOrWhiteSpace(userId) && !string.IsNullOrWhiteSpace(token))
+        {
+            var result = await ConfirmEmail(new ConfirmEmailRequest { UserId = userId, Token = token });
+            success = result is OkObjectResult;
+        }
+
+        var title = success ? "Email đã được xác minh" : "Không thể xác minh email";
+        var message = success
+            ? "Bạn có thể quay lại FIND&amp;GO để đăng nhập."
+            : "Liên kết không hợp lệ hoặc đã hết hạn. Vui lòng quay lại ứng dụng và yêu cầu gửi lại email xác minh.";
+        var loginLink = "";
+        if (Uri.TryCreate(configuration["ClientApp:BaseUrl"], UriKind.Absolute, out var clientUrl)
+            && (clientUrl.Scheme == "https" || clientUrl.Scheme == "http"))
+        {
+            var loginUrl = System.Net.WebUtility.HtmlEncode(clientUrl.AbsoluteUri.TrimEnd('/') + "/login");
+            loginLink = $"<p><a href=\"{loginUrl}\">Về trang đăng nhập</a></p>";
+        }
+
+        return new ContentResult
+        {
+            StatusCode = success ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest,
+            ContentType = "text/html; charset=utf-8",
+            Content = $"<!doctype html><html lang=\"vi\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>{title} | FIND&amp;GO</title><style>body{{font-family:system-ui,sans-serif;margin:64px auto;padding:24px;max-width:600px;line-height:1.6}}a{{color:#145c39}}</style></head><body><main><h1>{title}</h1><p>{message}</p>{loginLink}</main></body></html>"
+        };
+    }
+
     [HttpPost("confirm-email")]
     [AllowAnonymous]
     public async Task<IActionResult> ConfirmEmail(ConfirmEmailRequest request)
@@ -251,7 +286,11 @@ public sealed class AuthController(
     private async Task SendEmailConfirmationAsync(AppUser user, CancellationToken cancellationToken)
     {
         var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
-        var url = BuildClientUrl("auth/confirm-email", new Dictionary<string, string?>
+        // Configure the public API URL when running behind a proxy or sending links to another device.
+        var apiBaseUrl = configuration["Api:PublicBaseUrl"];
+        if (string.IsNullOrWhiteSpace(apiBaseUrl))
+            apiBaseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
+        var url = QueryHelpers.AddQueryString($"{apiBaseUrl.TrimEnd('/')}/api/v1/auth/confirm-email", new Dictionary<string, string?>
         {
             ["userId"] = user.Id,
             ["token"] = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token))

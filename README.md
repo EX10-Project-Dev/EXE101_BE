@@ -1,5 +1,13 @@
 # EXE101_BE - Backend FIND&GO
 
+### Link xác minh email
+
+Email đăng ký/gửi lại xác minh mở `GET /api/v1/auth/confirm-email?userId=...&token=...` trên BE. Endpoint xác minh token và hiển thị trang kết quả, kèm liên kết về `/login` của FE. `POST /api/v1/auth/confirm-email` vẫn hỗ trợ client gửi JSON như trước.
+
+- Đặt `Api:PublicBaseUrl` (biến môi trường `Api__PublicBaseUrl`) thành URL BE mà người nhận email truy cập được, ví dụ `https://api.example.com`. Nếu chưa đặt, BE dùng scheme/host/path base của request.
+- Đặt `ClientApp:BaseUrl` thành URL FE thực tế để nút về đăng nhập mở đúng trang. URL localhost chỉ dùng được trên chính máy đang chạy ứng dụng.
+- Sau khi cập nhật BE, gửi lại email xác minh để nhận link mới; link cũ vẫn trỏ tới route FE cũ. Luồng đặt lại mật khẩu vẫn cần trang FE `/auth/reset-password`.
+
 Backend cho dự án **FIND&GO**, được tổ chức theo kiến trúc 3 tầng.
 
 ## Công nghệ
