@@ -7,14 +7,9 @@ using DAL.Entities;
 using DAL.IRepositories;
 using DAL.Repositories;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
+using API.Security;
 using API.Services;
 using API.Swagger;
 
@@ -49,6 +44,7 @@ builder.Services.AddDataProtection();
 builder.Services.AddIdentityCore<AppUser>(opt =>
 {
     opt.Password.RequireNonAlphanumeric = false;
+    opt.Password.RequiredLength = 8;
     opt.User.RequireUniqueEmail = true;
     opt.SignIn.RequireConfirmedEmail = true;
     opt.Lockout.MaxFailedAccessAttempts = 5;
@@ -60,44 +56,9 @@ builder.Services.AddIdentityCore<AppUser>(opt =>
 builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
     options.TokenLifespan = TimeSpan.FromHours(3));
 
-var jwtConfiguration = builder.Configuration.GetSection("Jwt");
-var jwtSigningKey = jwtConfiguration["SigningKey"];
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidIssuer = jwtConfiguration["Issuer"] ?? "FINDGO",
-        ValidateAudience = true,
-        ValidAudience = jwtConfiguration["Audience"] ?? "FINDGO.Client",
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = string.IsNullOrWhiteSpace(jwtSigningKey)
-            ? new SymmetricSecurityKey(RandomNumberGenerator.GetBytes(32))
-            : new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSigningKey)),
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.FromSeconds(30)
-    };
-    options.Events = new JwtBearerEvents
-    {
-        OnTokenValidated = async context =>
-        {
-            var userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<AppUser>>();
-            var userId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
-            var tokenStamp = context.Principal?.FindFirstValue("sst");
-            var user = userId is null ? null : await userManager.FindByIdAsync(userId);
-            if (user is null || !user.IsActive || tokenStamp is null ||
-                !string.Equals(tokenStamp, await userManager.GetSecurityStampAsync(user), StringComparison.Ordinal))
-            {
-                context.Fail("The access token has been revoked.");
-            }
-        }
-    };
-});
+builder.Services.AddFindGoAuthentication(builder.Configuration);
+builder.Services.AddScoped<AccountRoleService>();
+builder.Services.AddScoped<AccountAdministrationService>();
 
 // 4. Register Dependency Injection for DAL (UnitOfWork & Generic Repository)
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -150,6 +111,14 @@ builder.Services.AddSwaggerGen(option =>
 });
 
 var app = builder.Build();
+
+if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
+{
+    await using var migrationScope = app.Services.CreateAsyncScope();
+    await migrationScope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
+}
+
+await IdentityRoleInitializer.InitializeAsync(app.Services, app.Configuration);
 
 if (app.Configuration.GetValue<bool>("SeedData:ImportVenueCatalogOnStartup"))
 {

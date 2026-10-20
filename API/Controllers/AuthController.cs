@@ -17,6 +17,8 @@ namespace API.Controllers;
 public sealed class AuthController(
     UserManager<AppUser> userManager,
     IAppEmailSender emailSender,
+    AccountRoleService accountRoles,
+    AccountAdministrationService administration,
     IConfiguration configuration,
     ILogger<AuthController> logger) : BaseApiController
 {
@@ -46,6 +48,7 @@ public sealed class AuthController(
 
         try
         {
+            await accountRoles.EnsureCustomerWhenUnassignedAsync(user);
             await SendEmailConfirmationAsync(user, cancellationToken);
         }
         catch
@@ -168,6 +171,16 @@ public sealed class AuthController(
         return Ok(new { message = "Đã đăng xuất." });
     }
 
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> Me()
+    {
+        var user = await userManager.GetUserAsync(User);
+        if (user is null) return Unauthorized();
+        return Ok(new { userId = user.Id, email = user.Email, fullName = user.FullName,
+            roles = await userManager.GetRolesAsync(user) });
+    }
+
     [HttpPost("forgot-password")]
     [AllowAnonymous]
     public async Task<IActionResult> ForgotPassword(EmailTokenRequest request, CancellationToken cancellationToken)
@@ -205,7 +218,7 @@ public sealed class AuthController(
     public async Task<IActionResult> ResetPassword(ResetPasswordRequest request)
     {
         var user = await userManager.FindByEmailAsync(request.Email.Trim());
-        if (user is null) return BadRequest(new { message = "Yêu cầu đặt lại mật khẩu không hợp lệ hoặc đã hết hạn." });
+        if (user is null || !user.EmailConfirmed) return BadRequest(new { message = "Yêu cầu đặt lại mật khẩu không hợp lệ hoặc đã hết hạn." });
 
         string decodedToken;
         try { decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(request.Token)); }
@@ -215,6 +228,21 @@ public sealed class AuthController(
         return result.Succeeded
             ? Ok(new { message = "Mật khẩu đã được cập nhật." })
             : BadRequest(new { message = "Không thể đặt lại mật khẩu.", errors = result.Errors.Select(x => x.Description) });
+    }
+
+    [HttpPost("activate-merchant")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ActivateMerchant(ActivateMerchantRequest request)
+    {
+        try
+        {
+            await administration.ActivateMerchantAsync(request);
+            return Ok(new { message = "Đã xác minh email và đặt mật khẩu. Bạn có thể đăng nhập." });
+        }
+        catch (AccountOperationException exception)
+        {
+            return StatusCode(exception.StatusCode, new { message = exception.Message });
+        }
     }
 
     [HttpPost("google")]
@@ -314,6 +342,8 @@ public sealed class AuthController(
 
     private async Task<object> CreateAuthResponseAsync(AppUser user)
     {
+        Response.Headers.CacheControl = "no-store";
+        var roles = await accountRoles.EnsureCustomerWhenUnassignedAsync(user);
         var jwt = configuration.GetSection("Jwt");
         var signingKey = jwt["SigningKey"];
         if (string.IsNullOrWhiteSpace(signingKey) || Encoding.UTF8.GetByteCount(signingKey) < 32)
@@ -333,13 +363,14 @@ public sealed class AuthController(
             new("sst", securityStamp)
         };
         var credentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)), SecurityAlgorithms.HmacSha256);
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
         var token = new JwtSecurityToken(issuer, audience, claims, now, expires, credentials);
         return new
         {
             accessToken = new JwtSecurityTokenHandler().WriteToken(token),
             tokenType = "Bearer",
             expiresAtUtc = expires,
-            user = new { userId = user.Id, email = user.Email, fullName = user.FullName }
+            user = new { userId = user.Id, email = user.Email, fullName = user.FullName, roles }
         };
     }
 }

@@ -47,6 +47,7 @@ namespace DAL.Data
                 entity.HasIndex(x => x.SourceId).IsUnique().HasFilter("[SourceId] IS NOT NULL");
                 entity.HasOne(x => x.Category).WithMany(x => x.Venues).HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne<AppUser>().WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne<AppUser>().WithMany().HasForeignKey(x => x.MerchantUserId).OnDelete(DeleteBehavior.Restrict);
                 entity.ToTable(t => t.HasCheckConstraint("CK_Venues_Latitude", "[Latitude] >= -90 AND [Latitude] <= 90"));
                 entity.ToTable(t => t.HasCheckConstraint("CK_Venues_Longitude", "[Longitude] >= -180 AND [Longitude] <= 180"));
                 entity.ToTable(t => t.HasCheckConstraint("CK_Venues_PriceRange", "[PriceMin] IS NULL OR [PriceMax] IS NULL OR [PriceMin] <= [PriceMax]"));

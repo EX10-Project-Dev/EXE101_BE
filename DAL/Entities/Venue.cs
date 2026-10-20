@@ -24,6 +24,7 @@ public class Venue : BaseEntity
     public string? PhoneNumber { get; set; }
     public VenueStatus Status { get; set; } = VenueStatus.Pending;
     public string? CreatedByUserId { get; set; }
+    public string? MerchantUserId { get; set; }
 
     public VenueCategory Category { get; set; } = null!;
     public ICollection<VenuePhoto> Photos { get; set; } = new List<VenuePhoto>();

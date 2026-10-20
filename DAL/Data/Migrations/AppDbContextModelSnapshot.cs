@@ -180,6 +180,9 @@ namespace DAL.Data.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<string>("MerchantUserId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -229,6 +232,8 @@ namespace DAL.Data.Migrations
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("MerchantUserId");
 
                     b.HasIndex("SourceId")
                         .IsUnique()
@@ -643,6 +648,11 @@ namespace DAL.Data.Migrations
                         .WithMany()
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("DAL.Entities.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("MerchantUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Category");
                 });

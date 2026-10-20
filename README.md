@@ -1,5 +1,11 @@
 # EXE101_BE - Backend FIND&GO
 
+### Phân quyền customer, merchant và admin
+
+Hướng dẫn cấu hình admin đầu tiên, migration database, cấp merchant và hợp đồng API cho FE: [ROLE_AUTH_GUIDE.md](docs/ROLE_AUTH_GUIDE.md).
+
+Đăng nhập email/Google trả thêm `user.roles`. FE cần bổ sung trang `/auth/activate-merchant` cho chủ quán đặt mật khẩu từ lời mời của admin.
+
 ### Link xác minh email
 
 Email đăng ký/gửi lại xác minh mở `GET /api/v1/auth/confirm-email?userId=...&token=...` trên BE. Endpoint xác minh token và hiển thị trang kết quả, kèm liên kết về `/login` của FE. `POST /api/v1/auth/confirm-email` vẫn hỗ trợ client gửi JSON như trước.
