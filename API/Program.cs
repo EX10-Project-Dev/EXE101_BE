@@ -110,9 +110,9 @@ builder.Services.AddAutoMapper(cfg =>
 });
 
 // 6. Register BLL services
-builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("OpenAI", client => client.Timeout = TimeSpan.FromSeconds(20));
 builder.Services.AddScoped<IAppEmailSender, SmtpAppEmailSender>();
-builder.Services.AddScoped<IPromptAnalysisService, PromptAnalysisService>();
+builder.Services.AddScoped<IPromptAnalysisService, OpenAiPromptAnalysisService>();
 builder.Services.AddScoped<IVenueSearchService, VenueSearchService>();
 builder.Services.AddScoped<IVenueService, VenueService>();
 
