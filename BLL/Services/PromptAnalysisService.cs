@@ -8,7 +8,8 @@ namespace BLL.Services;
 
 /// <summary>Offline Vietnamese keyword parser used when AI extraction is unavailable.</summary>
 public static class PromptAnalysisService
-{    public static ParsedSearchCriteria AnalyzeWithRuleBasedNlp(string prompt)
+{
+    public static ParsedSearchCriteria AnalyzeWithRuleBasedNlp(string prompt)
     {
         var lower = prompt.ToLowerInvariant();
 
@@ -24,8 +25,10 @@ public static class PromptAnalysisService
             categoryCode = "BAKERY_DESSERT";
         else if (Regex.IsMatch(lower, @"(kem|ice cream)"))
             categoryCode = "ICE_CREAM";
-        else if (Regex.IsMatch(lower, @"(cơm|phở|bún|bánh mì|quán ăn|nhà hàng)"))
-            categoryCode = "VIETNAMESE_RESTAURANT";
+        else if (Regex.IsMatch(lower, @"quán ăn"))
+            categoryCode = "EATERY";
+        else if (Regex.IsMatch(lower, @"nhà hàng"))
+            categoryCode = "RESTAURANT";
 
         // 2. Purpose Inference
         string? purpose = null;

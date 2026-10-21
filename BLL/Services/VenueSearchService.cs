@@ -1,5 +1,8 @@
 using System.Runtime.InteropServices;
+using System.Globalization;
+using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using BLL.DTOs.Common;
 using BLL.DTOs.Requests;
 using BLL.DTOs.Responses;
@@ -60,13 +63,21 @@ public sealed class VenueSearchService : IVenueSearchService
             parsedCriteria = await _promptAnalysisService.AnalyzePromptAsync(request.Prompt, cancellationToken);
         }
 
+        // Dish names appear across several venue categories, so search their text instead.
+        var dishTerms = Regex.Matches(NormalizeSearchText(request.Prompt ?? string.Empty), @"\b(?:com|pho|bun|banh mi)\b")
+            .Cast<Match>()
+            .Select(match => match.Value)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
         // Pre-process filters with prompt fallback
         var categoryCodes = request.CategoryCodes
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Select(x => x.Trim())
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        if (categoryCodes.Count == 0 && !string.IsNullOrWhiteSpace(parsedCriteria?.InferredCategoryCode))
+        if (categoryCodes.Count == 0 && dishTerms.Length == 0 &&
+            !string.IsNullOrWhiteSpace(parsedCriteria?.InferredCategoryCode))
         {
             categoryCodes.Add(parsedCriteria.InferredCategoryCode);
         }
@@ -118,6 +129,15 @@ public sealed class VenueSearchService : IVenueSearchService
             if (request.OpenNowOnly && !isOpen)
                 continue;
 
+            var sourceData = DeserializeSourceData(venue.SourceDataJson);
+            if (dishTerms.Length > 0)
+            {
+                sourceData.TryGetValue("tagsAndPurpose", out var sourceTags);
+                var dishText = NormalizeSearchText($"{venue.Name} {venue.Description} {sourceTags}");
+                if (!dishTerms.Any(term => Regex.IsMatch(dishText, $@"\b{Regex.Escape(term)}\b")))
+                    continue;
+            }
+
             // 2. Category hard filter
             if (categoryCodes.Count > 0 && !categoryCodes.Contains(venue.Category?.Code ?? string.Empty))
                 continue;
@@ -144,7 +164,6 @@ public sealed class VenueSearchService : IVenueSearchService
                 continue;
 
             // 5. Amenities & tags parsing (from relational tables or SourceDataJson)
-            var sourceData = DeserializeSourceData(venue.SourceDataJson);
             var venueAmenities = ExtractAmenityCodes(venue, sourceData);
             var (venuePurposes, venueAtmospheres) = ExtractTags(venue, sourceData);
 
@@ -154,6 +173,8 @@ public sealed class VenueSearchService : IVenueSearchService
 
             // 6. Recommendation Scoring (0.0 -> 1.0)
             var score = 0.50; // Base score
+
+            if (dishTerms.Length > 0) score += 0.25;
 
             // Distance score bonus (up to +0.25)
             if (distanceKm.HasValue)
@@ -479,6 +500,19 @@ public sealed class VenueSearchService : IVenueSearchService
     }
 
     private static double ToRadians(double degrees) => degrees * Math.PI / 180;
+
+    private static string NormalizeSearchText(string value)
+    {
+        var decomposed = value.ToLowerInvariant().Replace('đ', 'd').Normalize(NormalizationForm.FormD);
+        var normalized = new StringBuilder(decomposed.Length);
+        foreach (var character in decomposed)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark)
+                normalized.Append(character);
+        }
+
+        return normalized.ToString().Normalize(NormalizationForm.FormC);
+    }
 
     private static IReadOnlyDictionary<string, string?> DeserializeSourceData(string? sourceDataJson)
     {
