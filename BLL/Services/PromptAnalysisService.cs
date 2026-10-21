@@ -19,9 +19,9 @@ public static class PromptAnalysisService
             categoryCode = "CAFE";
         else if (Regex.IsMatch(lower, @"(trà sữa|tra sua|trà trái cây|milk tea)"))
             categoryCode = "TEA_DRINKS";
-        else if (Regex.IsMatch(lower, @"(lẩu|mala|hotpot)"))
+        else if (Regex.IsMatch(lower, @"mala"))
             categoryCode = "MALA_HOTPOT_FAST_FOOD";
-        else if (Regex.IsMatch(lower, @"(bánh|tráng miệng|dessert)"))
+        else if (Regex.IsMatch(lower, @"(tráng miệng|dessert|bakery)"))
             categoryCode = "BAKERY_DESSERT";
         else if (Regex.IsMatch(lower, @"(kem|ice cream)"))
             categoryCode = "ICE_CREAM";
@@ -60,7 +60,7 @@ public static class PromptAnalysisService
         var amenities = new List<string>();
         if (Regex.IsMatch(lower, @"(wifi|wi-fi|mạng|internet)"))
             amenities.Add("WIFI");
-        if (Regex.IsMatch(lower, @"(ổ cắm|o cam|cắm sạc|sạc pin|power)"))
+        if (Regex.IsMatch(lower, @"(ổ cắm|ổ điện|o cam|o dien|cắm sạc|sạc pin|power)"))
             amenities.Add("POWER_OUTLET");
         if (Regex.IsMatch(lower, @"(máy lạnh|điều hòa|may lanh|ac|air condition)"))
             amenities.Add("AIR_CONDITIONING");
@@ -95,7 +95,7 @@ public static class PromptAnalysisService
         decimal? budgetMax = null;
 
         // Match "dưới 50k", "< 70k", "tối đa 60.000", "dưới 50 ngàn"
-        var maxBudgetMatch = Regex.Match(lower, @"(dưới|tối đa|<|không quá|tầm)\s*(\d+[\.,]?\d*)\s*(k|nghìn|ngàn|vnd|đ)?");
+        var maxBudgetMatch = Regex.Match(lower, @"(dưới|tối đa|<|không quá|tầm|khoảng)\s*(\d+[\.,]?\d*)\s*(k|nghìn|ngàn|vnd|đ)?");
         if (maxBudgetMatch.Success)
         {
             var numStr = maxBudgetMatch.Groups[2].Value.Replace(".", "").Replace(",", ".");

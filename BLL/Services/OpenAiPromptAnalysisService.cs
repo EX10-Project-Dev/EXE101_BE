@@ -26,7 +26,7 @@ public sealed class OpenAiPromptAnalysisService : IPromptAnalysisService
         Allowed purposes: STUDY, WORK, DATING, GATHERING, DINING.
         Allowed atmospheres: QUIET, COZY, LIVELY, CHILL, OUTDOOR, ROOFTOP, MODERN.
         Allowed amenity codes: WIFI, POWER_OUTLET, AIR_CONDITIONING, PARKING, MOTORBIKE_PARKING, CAR_PARKING, GROUP_SEATING.
-        Budgets are in VND. Distances are in kilometers. Use null for unspecified numbers or single values, and empty arrays for unspecified lists.
+        Budgets are in VND. For a single approximate price such as "giá tầm 50k", set inferredBudgetMax to 50000. For a price range, set both budget bounds. Distances are in kilometers. Use null for unspecified numbers and empty arrays for unspecified lists.
         Write summaryExplanation briefly in Vietnamese.
         """;
 

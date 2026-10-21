@@ -71,7 +71,7 @@ builder.Services.AddAutoMapper(cfg =>
 });
 
 // 6. Register BLL services
-builder.Services.AddHttpClient("OpenAI", client => client.Timeout = TimeSpan.FromSeconds(20));
+builder.Services.AddHttpClient("OpenAI", client => client.Timeout = TimeSpan.FromSeconds(6));
 builder.Services.AddHttpClient<IAppEmailSender, MailjetAppEmailSender>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(10);

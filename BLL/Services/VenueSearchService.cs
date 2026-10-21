@@ -1,8 +1,5 @@
 using System.Runtime.InteropServices;
-using System.Globalization;
-using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using BLL.DTOs.Common;
 using BLL.DTOs.Requests;
 using BLL.DTOs.Responses;
@@ -63,12 +60,19 @@ public sealed class VenueSearchService : IVenueSearchService
             parsedCriteria = await _promptAnalysisService.AnalyzePromptAsync(request.Prompt, cancellationToken);
         }
 
-        // Dish names appear across several venue categories, so search their text instead.
-        var dishTerms = Regex.Matches(NormalizeSearchText(request.Prompt ?? string.Empty), @"\b(?:com|pho|bun|banh mi)\b")
-            .Cast<Match>()
-            .Select(match => match.Value)
-            .Distinct(StringComparer.Ordinal)
-            .ToArray();
+        // Venue names and food keywords can occur in any category. Match catalog text first.
+        var sourceDataByVenueId = venues.ToDictionary(v => v.Id, v => DeserializeSourceData(v.SourceDataJson));
+        var searchTerms = VenueSearchTextMatcher.GetTerms(request.Prompt);
+        var textMatchIds = searchTerms.Length == 0
+            ? new HashSet<Guid>()
+            : venues.Where(venue =>
+            {
+                var sourceData = sourceDataByVenueId[venue.Id];
+                sourceData.TryGetValue("tagsAndPurpose", out var sourceTags);
+                return VenueSearchTextMatcher.Matches(searchTerms,
+                    venue.Name, venue.Description, venue.Category?.Name, sourceTags);
+            }).Select(venue => venue.Id).ToHashSet();
+        var hasTextMatches = textMatchIds.Count > 0;
 
         // Pre-process filters with prompt fallback
         var categoryCodes = request.CategoryCodes
@@ -76,7 +80,7 @@ public sealed class VenueSearchService : IVenueSearchService
             .Select(x => x.Trim())
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        if (categoryCodes.Count == 0 && dishTerms.Length == 0 &&
+        if (categoryCodes.Count == 0 && !hasTextMatches &&
             !string.IsNullOrWhiteSpace(parsedCriteria?.InferredCategoryCode))
         {
             categoryCodes.Add(parsedCriteria.InferredCategoryCode);
@@ -108,7 +112,7 @@ public sealed class VenueSearchService : IVenueSearchService
             }
         }
 
-        var prompt = request.Prompt?.Trim().ToLowerInvariant();
+        var normalizedPrompt = VenueSearchTextMatcher.Normalize(request.Prompt);
         var purpose = request.Purpose?.Trim().ToUpperInvariant();
         if (string.IsNullOrEmpty(purpose) && !string.IsNullOrEmpty(parsedCriteria?.InferredPurpose))
         {
@@ -117,7 +121,9 @@ public sealed class VenueSearchService : IVenueSearchService
 
         var budgetMin = request.BudgetMin ?? parsedCriteria?.InferredBudgetMin;
         var budgetMax = request.BudgetMax ?? parsedCriteria?.InferredBudgetMax;
-        var maxDistanceKm = request.MaxDistanceKm ?? parsedCriteria?.InferredMaxDistanceKm;
+        var maxDistanceKm = request.Origin is null
+            ? null
+            : request.MaxDistanceKm ?? parsedCriteria?.InferredMaxDistanceKm;
         var groupSize = request.GroupSize ?? parsedCriteria?.InferredGroupSize;
 
         var scoredResults = new List<VenueSearchResult>();
@@ -129,14 +135,9 @@ public sealed class VenueSearchService : IVenueSearchService
             if (request.OpenNowOnly && !isOpen)
                 continue;
 
-            var sourceData = DeserializeSourceData(venue.SourceDataJson);
-            if (dishTerms.Length > 0)
-            {
-                sourceData.TryGetValue("tagsAndPurpose", out var sourceTags);
-                var dishText = NormalizeSearchText($"{venue.Name} {venue.Description} {sourceTags}");
-                if (!dishTerms.Any(term => Regex.IsMatch(dishText, $@"\b{Regex.Escape(term)}\b")))
-                    continue;
-            }
+            var sourceData = sourceDataByVenueId[venue.Id];
+            if (hasTextMatches && !textMatchIds.Contains(venue.Id))
+                continue;
 
             // 2. Category hard filter
             if (categoryCodes.Count > 0 && !categoryCodes.Contains(venue.Category?.Code ?? string.Empty))
@@ -174,7 +175,7 @@ public sealed class VenueSearchService : IVenueSearchService
             // 6. Recommendation Scoring (0.0 -> 1.0)
             var score = 0.50; // Base score
 
-            if (dishTerms.Length > 0) score += 0.25;
+            if (hasTextMatches) score += 0.25;
 
             // Distance score bonus (up to +0.25)
             if (distanceKm.HasValue)
@@ -209,10 +210,10 @@ public sealed class VenueSearchService : IVenueSearchService
             }
 
             // Prompt keyword bonus (+0.15)
-            if (!string.IsNullOrWhiteSpace(prompt))
+            if (!string.IsNullOrWhiteSpace(normalizedPrompt))
             {
-                var combinedText = $"{venue.Name} {venue.Description} {venue.Category?.Name}".ToLowerInvariant();
-                if (combinedText.Contains(prompt))
+                var name = VenueSearchTextMatcher.Normalize(venue.Name);
+                if (name.Contains(normalizedPrompt, StringComparison.Ordinal))
                 {
                     score += 0.15;
                 }
@@ -222,6 +223,8 @@ public sealed class VenueSearchService : IVenueSearchService
 
             // 7. Generate reasons
             var reasons = new List<string>();
+            if (hasTextMatches)
+                reasons.Add("Tên quán hoặc món ăn khớp từ khóa tìm kiếm");
             if (distanceKm.HasValue)
             {
                 reasons.Add($"Cách vị trí bắt đầu {Math.Round(distanceKm.Value, 1):0.#} km");
@@ -340,7 +343,7 @@ public sealed class VenueSearchService : IVenueSearchService
             Status = totalCount > 0 ? "MATCHED" : "NO_MATCH",
             Message = totalCount > 0
                 ? $"Tìm thấy {totalCount} địa điểm phù hợp nhất với nhu cầu của bạn."
-                : "Không tìm thấy địa điểm đang mở phù hợp với các điều kiện đã chọn.",
+                : "Không tìm thấy địa điểm phù hợp với các điều kiện đã chọn.",
             TotalCount = totalCount,
             Page = page,
             PageSize = pageSize,
@@ -501,19 +504,6 @@ public sealed class VenueSearchService : IVenueSearchService
 
     private static double ToRadians(double degrees) => degrees * Math.PI / 180;
 
-    private static string NormalizeSearchText(string value)
-    {
-        var decomposed = value.ToLowerInvariant().Replace('đ', 'd').Normalize(NormalizationForm.FormD);
-        var normalized = new StringBuilder(decomposed.Length);
-        foreach (var character in decomposed)
-        {
-            if (CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark)
-                normalized.Append(character);
-        }
-
-        return normalized.ToString().Normalize(NormalizationForm.FormC);
-    }
-
     private static IReadOnlyDictionary<string, string?> DeserializeSourceData(string? sourceDataJson)
     {
         if (string.IsNullOrWhiteSpace(sourceDataJson))
@@ -539,6 +529,8 @@ public sealed class VenueSearchService : IVenueSearchService
                 ? $"AI đã trích xuất tiêu chí từ prompt: {parsed.SummaryExplanation}"
                 : $"Bộ NLP đã trích xuất tiêu chí từ prompt: {parsed.SummaryExplanation}");
         }
+        if (request.Origin is null && parsed?.InferredMaxDistanceKm is not null)
+            warnings.Add("Chưa có vị trí của bạn nên chưa thể lọc theo khoảng cách.");
         return warnings;
     }
 }
