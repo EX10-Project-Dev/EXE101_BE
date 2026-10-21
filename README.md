@@ -154,8 +154,8 @@ Không commit signing key, Brevo API key, Google client secret hoặc ID token. 
 - [x] Tạo endpoint `GET /api/v1/venues/categories` và `GET /api/v1/venues/amenities` cung cấp dữ liệu cho bộ lọc Frontend.
 - [x] Nạp danh mục và 7 tiện ích chuẩn vào database khi khởi động.
 - [x] Thêm lọc kết quả theo các tiêu chí đã có dữ liệu: giờ mở cửa, danh mục, ngân sách và khoảng cách; hỗ trợ phân trang và link Google Maps.
-- [x] Tích hợp Gemini 3.8 Flash để phân tích prompt thành tiêu chí tìm kiếm; khi thiếu key hoặc Gemini lỗi, service dùng bộ phân tích quy tắc tiếng Việt dự phòng.
-- [x] Kết nối phân tích prompt với search và xác nhận trên Swagger: prompt tự nhiên được Gemini trích xuất, API trả các quán đang mở phù hợp.
+- [x] Tích hợp OpenAI Responses API để phân tích prompt thành tiêu chí tìm kiếm; khi thiếu API key hoặc OpenAI lỗi, service dùng bộ phân tích quy tắc tiếng Việt dự phòng.
+- [x] Kết nối phân tích prompt với search; API trả các quán đang mở phù hợp.
 - [x] Cấu hình kết nối Azure SQL trên máy phát triển. Connection string là cấu hình riêng, không commit; mỗi thành viên cần tự cấu hình và được cấp quyền truy cập Azure SQL.
 - [x] Thêm API đăng ký, xác minh email, đăng nhập/đăng xuất, quên/đặt lại mật khẩu và xác minh Google ID token; các dịch vụ Brevo, JWT và Google cần được cấu hình riêng trước khi dùng.
 
@@ -166,7 +166,7 @@ Không commit signing key, Brevo API key, Google client secret hoặc ID token. 
 - [ ] Tính năng người dùng: Lưu địa điểm yêu thích (Favorites / Bookmarks).
 - [ ] Bổ sung bảng đánh giá thật (Reviews & Ratings) thay cho dữ liệu giả lập.
 - [ ] Cấu hình Brevo, JWT signing key và Google OAuth Client ID trên môi trường dùng chung; FE cần nối các màn hình xác minh email/đặt lại mật khẩu và lấy Google ID token.
-- [ ] Các thành viên cần cấu hình Gemini API key và quyền truy cập Azure SQL riêng trên máy hoặc môi trường chạy của mình; không commit key/connection string.
+- [ ] Các thành viên cần cấu hình OpenAI API key và quyền truy cập Azure SQL riêng trên máy hoặc môi trường chạy của mình; không commit key/connection string.
 
 ### Gợi ý việc tiếp theo
 
@@ -191,7 +191,9 @@ Trong môi trường Development, API có thể tự nạp/upsert dữ liệu đ
 
 PDF có giờ mở cửa cho 37 mã địa điểm. Đã đưa lịch dùng được của 36 quán vào seed: `VEN-001`–`VEN-004`, `VEN-006`–`VEN-018`, `VEN-020`–`VEN-038`. `VEN-005` có lịch ghi trong bảng nhưng bị loại khỏi lọc giờ; không có lịch cho `VEN-019`, `VEN-039` và `VEN-040`. `VEN-009` chưa có giờ thứ Hai; `VEN-033` chưa có giờ thứ Ba. Một số lịch có giờ đóng sau nửa đêm. Đây là dữ liệu giả lập phục vụ demo/test.
 
-Trong môi trường Development, search cho phép xem địa điểm `Pending` khi `Search:IncludePendingVenues` bật; kết quả chỉ gồm quán đang mở theo lịch mẫu. Endpoint là `POST /api/v1/search/recommendations`. `page` mặc định là 1, `pageSize` mặc định là 10; FE có thể dùng `hasMore` để tải thêm và nối kết quả trong giao diện cuộn liên tục. Gemini phân tích prompt thành category, purpose, atmosphere, amenities, budget, distance và group size; hiện giờ mở, danh mục, ngân sách, khoảng cách và tiện ích được dùng để lọc, còn purpose/atmosphere dùng để xếp hạng. Prompt đã được thử trên Swagger với Gemini.
+Trong môi trường Development, search cho phép xem địa điểm `Pending` khi `Search:IncludePendingVenues` bật; kết quả chỉ gồm quán đang mở theo lịch mẫu. Endpoint là `POST /api/v1/search/recommendations`. `page` mặc định là 1, `pageSize` mặc định là 10; FE có thể dùng `hasMore` để tải thêm và nối kết quả trong giao diện cuộn liên tục. OpenAI phân tích prompt thành category, purpose, atmosphere, amenities, budget, distance và group size; hiện giờ mở, danh mục, ngân sách, khoảng cách và tiện ích được dùng để lọc, còn purpose/atmosphere dùng để xếp hạng. Nếu không cấu hình được OpenAI, bộ phân tích quy tắc tiếng Việt được dùng thay thế.
+
+Để bật OpenAI trên máy hoặc môi trường deploy, đặt biến môi trường `OpenAI__ApiKey` hoặc `OPENAI_API_KEY` bằng API key từ OpenAI Platform. Có thể đổi model bằng `OpenAI__Model` (mặc định `gpt-4.1-mini`). Không đưa key vào `appsettings.json` hoặc Git.
 
 ### Hướng dẫn dành cho AI hỗ trợ nhóm
 
