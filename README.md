@@ -59,10 +59,12 @@ Chạy các lệnh từ thư mục `EXE101_BE`.
 1. Khôi phục và biên dịch dự án:
 
    ```bash
-   dotnet build EXE101_BE.slnx
+   dotnet build Backend_EXE.slnx
    ```
 
-2. Cấu hình `ConnectionStrings:DefaultConnection` cho SQL Server trên máy của bạn. Không đưa mật khẩu hoặc thông tin kết nối riêng vào Git. Có thể dùng .NET User Secrets hoặc biến môi trường `ConnectionStrings__DefaultConnection`.
+2. Mỗi máy cần cấu hình riêng cho môi trường Development. Dùng `API/appsettings.Development.json` (đã được `.gitignore` bỏ qua) hoặc .NET User Secrets; tối thiểu cần `ConnectionStrings:DefaultConnection` để kết nối SQL Server và `Jwt:SigningKey` để đăng nhập. Không commit mật khẩu, chuỗi kết nối hoặc API key.
+
+   Nếu đang ở nhánh cũ có `API/appsettings.json`, hãy sao chép file đó thành `API/appsettings.Development.json` **trước khi** đổi nhánh hoặc pull bản mới. Khi sang máy khác, tạo lại file Development trên máy đó từ bản cấu hình riêng được chuyển qua kênh an toàn; Git không đồng bộ file bị bỏ qua. Có thể kiểm tra bằng `git check-ignore -v API/appsettings.Development.json`.
 
 3. Tạo/cập nhật các bảng trong database:
 
