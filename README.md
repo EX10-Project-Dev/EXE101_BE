@@ -41,7 +41,7 @@ EXE101_BE/
 ├── API/                     # Tầng Web API
 │   ├── Controllers/         # Các API endpoint
 │   ├── Program.cs           # Đăng ký dịch vụ và cấu hình ứng dụng
-│   └── appsettings.json     # Cấu hình ứng dụng
+│   └── appsettings.Development.json # Cấu hình local riêng của từng máy (không commit)
 └── README.md
 ```
 
@@ -125,7 +125,7 @@ Tài liệu: [Mailjet Send API](https://dev.mailjet.com/docs/email-api/getting-s
 
 ### Cấu hình local (không commit bí mật)
 
-`API/appsettings.json` liệt kê các khóa cấu hình cần có. Đặt giá trị thật trong .NET User Secrets hoặc biến môi trường:
+Đặt giá trị cấu hình thật trong `API/appsettings.Development.json` (file local bị Git bỏ qua), .NET User Secrets hoặc biến môi trường:
 
 - `Jwt:SigningKey`: chuỗi bí mật ít nhất 32 byte; cùng một giá trị phải được dùng ở tất cả môi trường chạy API.
 - `Email:ApiKey`, `Email:SecretKey`, `Email:From`: hai key Mailjet và địa chỉ sender đã xác minh. BE gửi qua HTTPS tới `https://api.mailjet.com/v3.1/send`, timeout 10 giây, không dùng SMTP.
@@ -156,7 +156,7 @@ Không commit signing key, Brevo API key, Google client secret hoặc ID token. 
 - [x] Tạo endpoint `GET /api/v1/venues/categories` và `GET /api/v1/venues/amenities` cung cấp dữ liệu cho bộ lọc Frontend.
 - [x] Nạp danh mục và 7 tiện ích chuẩn vào database khi khởi động.
 - [x] Thêm lọc kết quả theo các tiêu chí đã có dữ liệu: giờ mở cửa, danh mục, ngân sách và khoảng cách; hỗ trợ phân trang và link Google Maps.
-- [x] Tích hợp OpenAI Responses API để phân tích prompt thành tiêu chí tìm kiếm; khi thiếu API key hoặc OpenAI lỗi, service dùng bộ phân tích quy tắc tiếng Việt dự phòng.
+- [x] Tích hợp OpenAI Responses API để phân tích prompt thành tiêu chí tìm kiếm; nếu không dùng được OpenAI, thử lần lượt các Gemini key rồi dùng bộ phân tích quy tắc tiếng Việt dự phòng.
 - [x] Kết nối phân tích prompt với search; API trả các quán đang mở phù hợp.
 - [x] Cấu hình kết nối Azure SQL trên máy phát triển. Connection string là cấu hình riêng, không commit; mỗi thành viên cần tự cấu hình và được cấp quyền truy cập Azure SQL.
 - [x] Thêm API đăng ký, xác minh email, đăng nhập/đăng xuất, quên/đặt lại mật khẩu và xác minh Google ID token; các dịch vụ Brevo, JWT và Google cần được cấu hình riêng trước khi dùng.
@@ -168,7 +168,7 @@ Không commit signing key, Brevo API key, Google client secret hoặc ID token. 
 - [ ] Tính năng người dùng: Lưu địa điểm yêu thích (Favorites / Bookmarks).
 - [ ] Bổ sung bảng đánh giá thật (Reviews & Ratings) thay cho dữ liệu giả lập.
 - [ ] Cấu hình Brevo, JWT signing key và Google OAuth Client ID trên môi trường dùng chung; FE cần nối các màn hình xác minh email/đặt lại mật khẩu và lấy Google ID token.
-- [ ] Các thành viên cần cấu hình OpenAI API key và quyền truy cập Azure SQL riêng trên máy hoặc môi trường chạy của mình; không commit key/connection string.
+- [ ] Các thành viên cần được cấp quyền truy cập Azure SQL và cấu hình AI key trên máy hoặc môi trường chạy; không commit key/connection string vào Git khi chưa thống nhất cách chia sẻ bí mật.
 
 ### Gợi ý việc tiếp theo
 
@@ -193,9 +193,28 @@ Trong môi trường Development, API có thể tự nạp/upsert dữ liệu đ
 
 PDF có giờ mở cửa cho 37 mã địa điểm. Đã đưa lịch dùng được của 36 quán vào seed: `VEN-001`–`VEN-004`, `VEN-006`–`VEN-018`, `VEN-020`–`VEN-038`. `VEN-005` có lịch ghi trong bảng nhưng bị loại khỏi lọc giờ; không có lịch cho `VEN-019`, `VEN-039` và `VEN-040`. `VEN-009` chưa có giờ thứ Hai; `VEN-033` chưa có giờ thứ Ba. Một số lịch có giờ đóng sau nửa đêm. Đây là dữ liệu giả lập phục vụ demo/test.
 
-Trong môi trường Development, search cho phép xem địa điểm `Pending` khi `Search:IncludePendingVenues` bật; kết quả chỉ gồm quán đang mở theo lịch mẫu. Endpoint là `POST /api/v1/search/recommendations`. `page` mặc định là 1, `pageSize` mặc định là 10; FE có thể dùng `hasMore` để tải thêm và nối kết quả trong giao diện cuộn liên tục. OpenAI phân tích prompt thành category, purpose, atmosphere, amenities, budget, distance và group size; hiện giờ mở, danh mục, ngân sách, khoảng cách và tiện ích được dùng để lọc, còn purpose/atmosphere dùng để xếp hạng. Nếu không cấu hình được OpenAI, bộ phân tích quy tắc tiếng Việt được dùng thay thế.
+Trong môi trường Development, search cho phép xem địa điểm `Pending` khi `Search:IncludePendingVenues` bật; kết quả chỉ gồm quán đang mở theo lịch mẫu. Endpoint là `POST /api/v1/search/recommendations`. `page` mặc định là 1, `pageSize` mặc định là 10; FE có thể dùng `hasMore` để tải thêm và nối kết quả trong giao diện cuộn liên tục. AI phân tích prompt thành category, purpose, atmosphere, amenities, budget, distance và group size; hiện giờ mở, danh mục, ngân sách, khoảng cách và tiện ích được dùng để lọc, còn purpose/atmosphere dùng để xếp hạng. Nếu không cấu hình được AI, bộ phân tích quy tắc tiếng Việt được dùng thay thế.
 
 Để bật OpenAI trên máy hoặc môi trường deploy, đặt biến môi trường `OpenAI__ApiKey` hoặc `OPENAI_API_KEY` bằng API key từ OpenAI Platform. Có thể đổi model bằng `OpenAI__Model` (mặc định `gpt-4.1-mini`). Không đưa key vào `appsettings.json` hoặc Git.
+
+### Gemini key dự phòng
+
+Search thử OpenAI trước nếu đã cấu hình. Khi OpenAI không dùng được, search thử Gemini bằng các key trong `Gemini:ApiKeys`; mỗi yêu cầu bắt đầu ở key kế tiếp và thử key khác nếu key hiện tại lỗi hoặc bị giới hạn. Nếu tất cả đều không dùng được, search dùng bộ phân tích tiếng Việt local. Có thể đặt model qua `Gemini:Model` (mặc định `gemini-2.5-flash`). Cấu hình cũ `GeminiApiKeys` và `AI:GeminiApiKeys` vẫn được đọc; key cũ dạng Base64 được giải mã. Base64 chỉ là mã hóa biểu diễn, không bảo vệ key.
+
+Ví dụ cấu trúc trong file cấu hình **riêng của mỗi máy**, dùng giá trị giả để minh họa:
+
+```json
+{
+  "Gemini": {
+    "ApiKeys": ["<gemini-key-1>", "<gemini-key-2>"],
+    "Model": "gemini-2.5-flash"
+  }
+}
+```
+
+Nếu nhóm muốn `git pull` là có cùng key ngay, nhóm phải chọn một nguồn chung cho bí mật (ví dụ file được commit vào repo, hoặc kho bí mật ngoài Git mà mỗi máy có quyền đọc). Key để thẳng trong repo sẽ hiện với mọi người có quyền đọc repo và còn trong lịch sử Git sau khi xóa. Nên tạo key mới thay cho key từng gửi qua chat/lịch sử Git. Nhiều key trong **cùng một Google Cloud project** vẫn dùng chung hạn mức của project, nên đổi key không giải quyết việc hết quota của project.
+
+Để chia sẻ thủ công cho nhóm, gửi riêng file `API/appsettings.json` cho từng thành viên. Mỗi người đặt file vào thư mục `API/` của bản clone của mình rồi chạy `dotnet run --project API/API.csproj`. File này được `.gitignore` bỏ qua nên `git pull` không tự tải về. Nếu người nhận đã có `API/appsettings.Development.json`, các giá trị trong file Development sẽ được ưu tiên hơn những khóa trùng tên trong `appsettings.json`; kiểm tra file đó khi cấu hình nhận được chưa có hiệu lực. File đầy đủ chứa cả mật khẩu database và JWT signing key, nên chỉ gửi qua kênh riêng của nhóm.
 
 ### Hướng dẫn dành cho AI hỗ trợ nhóm
 

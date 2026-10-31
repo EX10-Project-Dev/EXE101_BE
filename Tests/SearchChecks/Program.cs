@@ -103,6 +103,7 @@ var exactNames = seed.RootElement.EnumerateArray()
 foreach (var name in exactNames)
     Contains(await Search(name), name, name);
 
+await AiFallbackChecks.RunAsync();
 Console.WriteLine($"Search checks passed: dish/category cases and all {exactNames.Length} venue names.");
 
 sealed class LocalPromptAnalysisService : IPromptAnalysisService
