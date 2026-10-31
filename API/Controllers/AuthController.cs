@@ -17,6 +17,8 @@ namespace API.Controllers;
 public sealed class AuthController(
     UserManager<AppUser> userManager,
     IAppEmailSender emailSender,
+    AccountRoleService accountRoles,
+    AccountAdministrationService administration,
     IConfiguration configuration,
     ILogger<AuthController> logger) : BaseApiController
 {
@@ -26,7 +28,7 @@ public sealed class AuthController(
     {
         if (!emailSender.IsConfigured || string.IsNullOrWhiteSpace(configuration["ClientApp:BaseUrl"]))
             return StatusCode(StatusCodes.Status503ServiceUnavailable,
-                new { message = "Email chưa được cấu hình. Hãy cấu hình SMTP và ClientApp:BaseUrl trước khi đăng ký." });
+                new { message = "Email chưa được cấu hình. Hãy cấu hình Email:ApiKey, Email:SecretKey, Email:From và ClientApp:BaseUrl trước khi đăng ký." });
 
         var email = request.Email.Trim();
         if (await userManager.FindByEmailAsync(email) is not null)
@@ -46,6 +48,7 @@ public sealed class AuthController(
 
         try
         {
+            await accountRoles.EnsureCustomerWhenUnassignedAsync(user);
             await SendEmailConfirmationAsync(user, cancellationToken);
         }
         catch
@@ -57,6 +60,41 @@ public sealed class AuthController(
 
         return StatusCode(StatusCodes.Status201Created,
             new { message = "Tạo tài khoản thành công. Hãy kiểm tra email để xác minh trước khi đăng nhập." });
+    }
+
+    [HttpGet("confirm-email")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ConfirmEmailLink([FromQuery] string? userId, [FromQuery] string? token)
+    {
+        Response.Headers.CacheControl = "no-store";
+        Response.Headers["Referrer-Policy"] = "no-referrer";
+        Response.Headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'";
+
+        var success = false;
+        if (!string.IsNullOrWhiteSpace(userId) && !string.IsNullOrWhiteSpace(token))
+        {
+            var result = await ConfirmEmail(new ConfirmEmailRequest { UserId = userId, Token = token });
+            success = result is OkObjectResult;
+        }
+
+        var title = success ? "Email đã được xác minh" : "Không thể xác minh email";
+        var message = success
+            ? "Bạn có thể quay lại FIND&amp;GO để đăng nhập."
+            : "Liên kết không hợp lệ hoặc đã hết hạn. Vui lòng quay lại ứng dụng và yêu cầu gửi lại email xác minh.";
+        var loginLink = "";
+        if (Uri.TryCreate(configuration["ClientApp:BaseUrl"], UriKind.Absolute, out var clientUrl)
+            && (clientUrl.Scheme == "https" || clientUrl.Scheme == "http"))
+        {
+            var loginUrl = System.Net.WebUtility.HtmlEncode(clientUrl.AbsoluteUri.TrimEnd('/') + "/login");
+            loginLink = $"<p><a href=\"{loginUrl}\">Về trang đăng nhập</a></p>";
+        }
+
+        return new ContentResult
+        {
+            StatusCode = success ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest,
+            ContentType = "text/html; charset=utf-8",
+            Content = $"<!doctype html><html lang=\"vi\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>{title} | FIND&amp;GO</title><style>body{{font-family:system-ui,sans-serif;margin:64px auto;padding:24px;max-width:600px;line-height:1.6}}a{{color:#145c39}}</style></head><body><main><h1>{title}</h1><p>{message}</p>{loginLink}</main></body></html>"
+        };
     }
 
     [HttpPost("confirm-email")]
@@ -133,6 +171,16 @@ public sealed class AuthController(
         return Ok(new { message = "Đã đăng xuất." });
     }
 
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> Me()
+    {
+        var user = await userManager.GetUserAsync(User);
+        if (user is null) return Unauthorized();
+        return Ok(new { userId = user.Id, email = user.Email, fullName = user.FullName,
+            roles = await userManager.GetRolesAsync(user) });
+    }
+
     [HttpPost("forgot-password")]
     [AllowAnonymous]
     public async Task<IActionResult> ForgotPassword(EmailTokenRequest request, CancellationToken cancellationToken)
@@ -170,7 +218,7 @@ public sealed class AuthController(
     public async Task<IActionResult> ResetPassword(ResetPasswordRequest request)
     {
         var user = await userManager.FindByEmailAsync(request.Email.Trim());
-        if (user is null) return BadRequest(new { message = "Yêu cầu đặt lại mật khẩu không hợp lệ hoặc đã hết hạn." });
+        if (user is null || !user.EmailConfirmed) return BadRequest(new { message = "Yêu cầu đặt lại mật khẩu không hợp lệ hoặc đã hết hạn." });
 
         string decodedToken;
         try { decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(request.Token)); }
@@ -180,6 +228,21 @@ public sealed class AuthController(
         return result.Succeeded
             ? Ok(new { message = "Mật khẩu đã được cập nhật." })
             : BadRequest(new { message = "Không thể đặt lại mật khẩu.", errors = result.Errors.Select(x => x.Description) });
+    }
+
+    [HttpPost("activate-merchant")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ActivateMerchant(ActivateMerchantRequest request)
+    {
+        try
+        {
+            await administration.ActivateMerchantAsync(request);
+            return Ok(new { message = "Đã xác minh email và đặt mật khẩu. Bạn có thể đăng nhập." });
+        }
+        catch (AccountOperationException exception)
+        {
+            return StatusCode(exception.StatusCode, new { message = exception.Message });
+        }
     }
 
     [HttpPost("google")]
@@ -251,7 +314,11 @@ public sealed class AuthController(
     private async Task SendEmailConfirmationAsync(AppUser user, CancellationToken cancellationToken)
     {
         var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
-        var url = BuildClientUrl("auth/confirm-email", new Dictionary<string, string?>
+        // Configure the public API URL when running behind a proxy or sending links to another device.
+        var apiBaseUrl = configuration["Api:PublicBaseUrl"];
+        if (string.IsNullOrWhiteSpace(apiBaseUrl))
+            apiBaseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
+        var url = QueryHelpers.AddQueryString($"{apiBaseUrl.TrimEnd('/')}/api/v1/auth/confirm-email", new Dictionary<string, string?>
         {
             ["userId"] = user.Id,
             ["token"] = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token))
@@ -275,6 +342,8 @@ public sealed class AuthController(
 
     private async Task<object> CreateAuthResponseAsync(AppUser user)
     {
+        Response.Headers.CacheControl = "no-store";
+        var roles = await accountRoles.EnsureCustomerWhenUnassignedAsync(user);
         var jwt = configuration.GetSection("Jwt");
         var signingKey = jwt["SigningKey"];
         if (string.IsNullOrWhiteSpace(signingKey) || Encoding.UTF8.GetByteCount(signingKey) < 32)
@@ -294,13 +363,14 @@ public sealed class AuthController(
             new("sst", securityStamp)
         };
         var credentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)), SecurityAlgorithms.HmacSha256);
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
         var token = new JwtSecurityToken(issuer, audience, claims, now, expires, credentials);
         return new
         {
             accessToken = new JwtSecurityTokenHandler().WriteToken(token),
             tokenType = "Bearer",
             expiresAtUtc = expires,
-            user = new { userId = user.Id, email = user.Email, fullName = user.FullName }
+            user = new { userId = user.Id, email = user.Email, fullName = user.FullName, roles }
         };
     }
 }

@@ -38,9 +38,12 @@ public static class VenueCatalogSeeder
             await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
             // Clean up any legacy invalid Google Maps search links stored in VenuePhotos table
-            await db.Database.ExecuteSqlRawAsync(
-                "IF OBJECT_ID('dbo.VenuePhotos', 'U') IS NOT NULL DELETE FROM [dbo].[VenuePhotos] WHERE [ImageUrl] LIKE '%google.com/maps%' OR [ImageUrl] LIKE '%maps/search%' OR [ImageUrl] LIKE '%google. com%'",
-                cancellationToken);
+            if (db.Database.IsSqlServer())
+            {
+                await db.Database.ExecuteSqlRawAsync(
+                    "IF OBJECT_ID('dbo.VenuePhotos', 'U') IS NOT NULL DELETE FROM [dbo].[VenuePhotos] WHERE [ImageUrl] LIKE '%google.com/maps%' OR [ImageUrl] LIKE '%maps/search%' OR [ImageUrl] LIKE '%google. com%'",
+                    cancellationToken);
+            }
 
         var categoryNames = records.Select(x => x.SourceCategory).Distinct().ToArray();
         var categoryCodes = categoryNames.ToDictionary(x => x, GetCategoryCode);
@@ -108,11 +111,15 @@ public static class VenueCatalogSeeder
             var isNew = false;
             if (!existingVenues.TryGetValue(record.SourceId, out var venue))
             {
-                venue = new Venue { SourceId = record.SourceId, Status = VenueStatus.Pending };
+                venue = new Venue { SourceId = record.SourceId, Status = VenueStatus.Published };
                 db.Venues.Add(venue);
                 existingVenues.Add(record.SourceId, venue);
                 isNew = true;
             }
+
+            // Seed imports must not overwrite the information a merchant manages.
+            if (!isNew && venue.MerchantUserId is not null)
+                continue;
 
             string? placeId = record.GooglePlaceId;
             if (string.IsNullOrWhiteSpace(placeId) && record.SourceData.TryGetValue("googleMapsUrlSource", out var mapUrl) && !string.IsNullOrWhiteSpace(mapUrl))

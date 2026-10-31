@@ -1,5 +1,19 @@
 # EXE101_BE - Backend FIND&GO
 
+### Phân quyền customer, merchant và admin
+
+Hướng dẫn cấu hình admin đầu tiên, migration database, cấp merchant và hợp đồng API cho FE: [ROLE_AUTH_GUIDE.md](docs/ROLE_AUTH_GUIDE.md).
+
+Đăng nhập email/Google trả thêm `user.roles`. FE cần bổ sung trang `/auth/activate-merchant` cho chủ quán đặt mật khẩu từ lời mời của admin.
+
+### Link xác minh email
+
+Email đăng ký/gửi lại xác minh mở `GET /api/v1/auth/confirm-email?userId=...&token=...` trên BE. Endpoint xác minh token và hiển thị trang kết quả, kèm liên kết về `/login` của FE. `POST /api/v1/auth/confirm-email` vẫn hỗ trợ client gửi JSON như trước.
+
+- Đặt `Api:PublicBaseUrl` (biến môi trường `Api__PublicBaseUrl`) thành URL BE mà người nhận email truy cập được, ví dụ `https://api.example.com`. Nếu chưa đặt, BE dùng scheme/host/path base của request.
+- Đặt `ClientApp:BaseUrl` thành URL FE thực tế để nút về đăng nhập mở đúng trang. URL localhost chỉ dùng được trên chính máy đang chạy ứng dụng.
+- Sau khi cập nhật BE, gửi lại email xác minh để nhận link mới; link cũ vẫn trỏ tới route FE cũ. Luồng đặt lại mật khẩu vẫn cần trang FE `/auth/reset-password`.
+
 Backend cho dự án **FIND&GO**, được tổ chức theo kiến trúc 3 tầng.
 
 ## Công nghệ
@@ -45,10 +59,12 @@ Chạy các lệnh từ thư mục `EXE101_BE`.
 1. Khôi phục và biên dịch dự án:
 
    ```bash
-   dotnet build EXE101_BE.slnx
+   dotnet build Backend_EXE.slnx
    ```
 
-2. Cấu hình `ConnectionStrings:DefaultConnection` cho SQL Server trên máy của bạn. Không đưa mật khẩu hoặc thông tin kết nối riêng vào Git. Có thể dùng .NET User Secrets hoặc biến môi trường `ConnectionStrings__DefaultConnection`.
+2. Mỗi máy cần cấu hình riêng cho môi trường Development. Dùng `API/appsettings.Development.json` (đã được `.gitignore` bỏ qua) hoặc .NET User Secrets; tối thiểu cần `ConnectionStrings:DefaultConnection` để kết nối SQL Server và `Jwt:SigningKey` để đăng nhập. Không commit mật khẩu, chuỗi kết nối hoặc API key.
+
+   Nếu đang ở nhánh cũ có `API/appsettings.json`, hãy sao chép file đó thành `API/appsettings.Development.json` **trước khi** đổi nhánh hoặc pull bản mới. Khi sang máy khác, tạo lại file Development trên máy đó từ bản cấu hình riêng được chuyển qua kênh an toàn; Git không đồng bộ file bị bỏ qua. Có thể kiểm tra bằng `git check-ignore -v API/appsettings.Development.json`.
 
 3. Tạo/cập nhật các bảng trong database:
 
@@ -83,29 +99,51 @@ Các endpoint tài khoản nằm dưới `/api/v1/auth`:
 
 Các token xác minh email và đặt lại mật khẩu có hiệu lực 3 giờ. Sau khi thêm hoặc cập nhật code, chạy `dotnet ef database update --project DAL/DAL.csproj --startup-project API/API.csproj` để bảo đảm database có các bảng Identity (migration hiện có đã tạo chúng).
 
+### Gửi email trên Render Free qua Mailjet
+
+BE dùng Mailjet HTTPS API cho đăng ký, gửi lại xác minh và đặt lại mật khẩu. Render Free chặn SMTP trên cổng 25/465/587.
+
+1. Tạo tài khoản Mailjet, thêm sender (tên FIND&GO và địa chỉ email bạn sở hữu), rồi bấm link xác minh gửi tới email đó.
+2. Trong Account → API Keys, lấy Primary API Key và Generate Secret Key.
+3. Thêm biến môi trường trong Render:
+
+| Biến | Giá trị |
+| --- | --- |
+| `Email__ApiKey` | Primary API Key Mailjet |
+| `Email__SecretKey` | Secret Key Mailjet |
+| `Email__From` | `hungthai1804@gmail.com` (sender đã Active) |
+| `Api__PublicBaseUrl` | URL BE Render, không thêm `/api` |
+| `ClientApp__BaseUrl` | URL FE thực tế |
+
+Các biến SMTP cũ không còn được sử dụng. Lưu biến và deploy phiên bản BE mới.
+
+Chưa có tên miền riêng: dùng sender Gmail đã xác minh để test. Email có thể vào thư rác; về lâu dài nên xác thực tên miền riêng.
+
+Kiểm tra sau deploy: đăng ký email mới → HTTP 201 → nhận thư → mở link xác minh → đăng nhập HTTP 200. Nếu nhận 503, xem Render logs và Mailjet API logs: 401/403 thường cần kiểm tra hai key hoặc sender; 429 cần kiểm tra giới hạn gửi. HTTP 201 nghĩa là nhà cung cấp đã nhận yêu cầu, chưa bảo đảm thư đến inbox; kiểm tra cả spam.
+
+Tài liệu: [Mailjet Send API](https://dev.mailjet.com/docs/email-api/getting-started/send-first-email), [Render Free](https://render.com/docs/free).
+
 ### Cấu hình local (không commit bí mật)
 
-`API/appsettings.example.json` liệt kê các khóa cấu hình cần có. Đặt giá trị thật trong .NET User Secrets hoặc biến môi trường:
+`API/appsettings.json` liệt kê các khóa cấu hình cần có. Đặt giá trị thật trong .NET User Secrets hoặc biến môi trường:
 
 - `Jwt:SigningKey`: chuỗi bí mật ít nhất 32 byte; cùng một giá trị phải được dùng ở tất cả môi trường chạy API.
-- `Email:Host`, `Email:Port`, `Email:From`, `Email:Username`, `Email:Password`, `Email:EnableSsl`: SMTP của dịch vụ gửi thư. Với nhà cung cấp yêu cầu xác thực, dùng app password/API credential riêng.
-- `ClientApp:BaseUrl`: URL gốc của FE. FE cần có trang nhận `/auth/confirm-email` và `/auth/reset-password`, đọc query token rồi gọi endpoint tương ứng.
+- `Email:ApiKey`, `Email:SecretKey`, `Email:From`: hai key Mailjet và địa chỉ sender đã xác minh. BE gửi qua HTTPS tới `https://api.mailjet.com/v3.1/send`, timeout 10 giây, không dùng SMTP.
+- `ClientApp:BaseUrl`: URL gốc của FE. Link xác minh mở trang BE; FE cần trang `/auth/reset-password` đọc query token và gọi endpoint đặt lại mật khẩu.
 - `Google:ClientIds`: danh sách OAuth Client ID được FE/mobile dùng để lấy Google ID token. Client gửi ID token tới `POST /api/v1/auth/google`; API xác minh chữ ký, audience và email đã xác minh trước khi cấp JWT.
 
 Ví dụ thiết lập bằng User Secrets (chạy trong thư mục `EXE101_BE`):
 
 ```bash
 dotnet user-secrets set "Jwt:SigningKey" "<chuoi-bi-mat-it-nhat-32-byte>" --project API/API.csproj
-dotnet user-secrets set "Email:Host" "<smtp-host>" --project API/API.csproj
-dotnet user-secrets set "Email:Port" "587" --project API/API.csproj
+dotnet user-secrets set "Email:ApiKey" "<mailjet-api-key>" --project API/API.csproj
+dotnet user-secrets set "Email:SecretKey" "<mailjet-secret-key>" --project API/API.csproj
 dotnet user-secrets set "Email:From" "<email-gui-di>" --project API/API.csproj
-dotnet user-secrets set "Email:Username" "<smtp-username>" --project API/API.csproj
-dotnet user-secrets set "Email:Password" "<smtp-app-password>" --project API/API.csproj
 dotnet user-secrets set "ClientApp:BaseUrl" "<url-fe-local>" --project API/API.csproj
 dotnet user-secrets set "Google:ClientIds:0" "<google-oauth-client-id>" --project API/API.csproj
 ```
 
-Không commit signing key, SMTP password, Google client secret hoặc ID token. Google Login ở đây nhận ID token từ client nên BE không cần Google client secret.
+Không commit signing key, Brevo API key, Google client secret hoặc ID token. Google Login ở đây nhận ID token từ client nên BE không cần Google client secret.
 
 ## Tiến độ BE và việc tiếp theo
 
@@ -121,7 +159,7 @@ Không commit signing key, SMTP password, Google client secret hoặc ID token. 
 - [x] Tích hợp OpenAI Responses API để phân tích prompt thành tiêu chí tìm kiếm; khi thiếu API key hoặc OpenAI lỗi, service dùng bộ phân tích quy tắc tiếng Việt dự phòng.
 - [x] Kết nối phân tích prompt với search; API trả các quán đang mở phù hợp.
 - [x] Cấu hình kết nối Azure SQL trên máy phát triển. Connection string là cấu hình riêng, không commit; mỗi thành viên cần tự cấu hình và được cấp quyền truy cập Azure SQL.
-- [x] Thêm API đăng ký, xác minh email, đăng nhập/đăng xuất, quên/đặt lại mật khẩu và xác minh Google ID token; các dịch vụ SMTP, JWT và Google cần được cấu hình riêng trước khi dùng.
+- [x] Thêm API đăng ký, xác minh email, đăng nhập/đăng xuất, quên/đặt lại mật khẩu và xác minh Google ID token; các dịch vụ Brevo, JWT và Google cần được cấu hình riêng trước khi dùng.
 
 ### Chưa hoàn thành / đề xuất làm tiếp
 
@@ -129,7 +167,7 @@ Không commit signing key, SMTP password, Google client secret hoặc ID token. 
 - [ ] FE lấy vị trí GPS hoặc cho người dùng nhập điểm bắt đầu rồi gửi `origin`; API hiện tính khoảng cách từ `origin` nhưng không tự lấy GPS.
 - [ ] Tính năng người dùng: Lưu địa điểm yêu thích (Favorites / Bookmarks).
 - [ ] Bổ sung bảng đánh giá thật (Reviews & Ratings) thay cho dữ liệu giả lập.
-- [ ] Cấu hình SMTP, JWT signing key và Google OAuth Client ID trên môi trường dùng chung; FE cần nối các màn hình xác minh email/đặt lại mật khẩu và lấy Google ID token.
+- [ ] Cấu hình Brevo, JWT signing key và Google OAuth Client ID trên môi trường dùng chung; FE cần nối các màn hình xác minh email/đặt lại mật khẩu và lấy Google ID token.
 - [ ] Các thành viên cần cấu hình OpenAI API key và quyền truy cập Azure SQL riêng trên máy hoặc môi trường chạy của mình; không commit key/connection string.
 
 ### Gợi ý việc tiếp theo
